@@ -40,9 +40,9 @@ resource "azurerm_kubernetes_cluster" "default" {
     network_plugin = var.aks_network_plugin
   }
 
-  azure_policy {
-    enabled = true
-  }
+  #azure_policy {
+  #  enabled = true
+  #}
   addon_profile {
     oms_agent {
       enabled                    = true
