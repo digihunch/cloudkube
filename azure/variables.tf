@@ -7,8 +7,7 @@ variable "Tags" {
   }
 }
 variable "ResourceGroup" {
-  type    = string
-  # export TF_VAR_ResourceGroup=xxx
+  type = string
 }
 variable "pubkey_data" {
   type    = string
@@ -16,5 +15,4 @@ variable "pubkey_data" {
 }
 variable "AdminGroupGUID" {
   type    = string
-  default = "xyz"
 }

@@ -15,10 +15,10 @@ module "log-analytics" {
 }
 
 module "event-hub" {
-  source            = "./modules/eventhub"
-  resource_group = var.ResourceGroup
-  resource_prefix    = random_pet.prefix.id
-  resource_tags = var.Tags
+  source          = "./modules/eventhub"
+  resource_group  = var.ResourceGroup
+  resource_prefix = random_pet.prefix.id
+  resource_tags   = var.Tags
 }
 
 module "aks-cluster" {
@@ -55,12 +55,12 @@ module "aks-rbac" {
 }
 
 module "diag-setting" {
-  source           = "./modules/diag-setting"
-  resource_prefix   = random_pet.prefix.id
-  resource_tags = var.Tags
-  ds_eh_aks_id     = module.aks-cluster.kubernetes_cluster_id
-  ds_laws_id       = module.log-analytics.laws_id
-  ds_eh_name       = module.event-hub.eventhub_name
-  ds_ehar_id       = module.event-hub.eventhub_authn_rule_id
-  depends_on = [module.event-hub, module.log-analytics, module.aks-cluster]
+  source          = "./modules/diag-setting"
+  resource_prefix = random_pet.prefix.id
+  resource_tags   = var.Tags
+  ds_eh_aks_id    = module.aks-cluster.kubernetes_cluster_id
+  ds_laws_id      = module.log-analytics.laws_id
+  ds_eh_name      = module.event-hub.eventhub_name
+  ds_ehar_id      = module.event-hub.eventhub_authn_rule_id
+  depends_on      = [module.event-hub, module.log-analytics, module.aks-cluster]
 }
