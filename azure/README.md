@@ -34,7 +34,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_AdminGroupGUID"></a> [AdminGroupGUID](#input\_AdminGroupGUID) | n/a | `string` | `"74d661ce-cce6-4aed-830d-5abc732a1132"` | no |
+| <a name="input_AdminGroupGUID"></a> [AdminGroupGUID](#input\_AdminGroupGUID) | n/a | `string` | `"112233445-cce6-4aed-830d-66677799933"` | no |
 | <a name="input_ResourceGroup"></a> [ResourceGroup](#input\_ResourceGroup) | n/a | `string` | n/a | yes |
 | <a name="input_Tags"></a> [Tags](#input\_Tags) | Tags for every resource. | `map(any)` | <pre>{<br>  "Environment": "Dev",<br>  "Owner": "my@email.com"<br>}</pre> | no |
 | <a name="input_pubkey_data"></a> [pubkey\_data](#input\_pubkey\_data) | n/a | `string` | `null` | no |
