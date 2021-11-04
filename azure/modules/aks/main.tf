@@ -1,3 +1,9 @@
+resource "azurerm_user_assigned_identity" "default" {
+  name                = "${var.resource_prefix}-aks-user-identity"
+  location            = data.azurerm_resource_group.default.location
+  resource_group_name = data.azurerm_resource_group.default.name
+}
+
 resource "azurerm_kubernetes_cluster" "default" {
   location                            = data.azurerm_resource_group.default.location
   resource_group_name                 = data.azurerm_resource_group.default.name
@@ -25,6 +31,7 @@ resource "azurerm_kubernetes_cluster" "default" {
 
   identity {
     type = "SystemAssigned"
+    user_assigned_identity_id = azurerm_user_assigned_identity.default.id
   }
 
   role_based_access_control {
