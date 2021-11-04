@@ -43,7 +43,7 @@ module "bastion" {
   bastion_subnet_id = module.network.mgmt_subnet_id
   aks_cluster_fqdn  = module.aks-cluster.aks_fqdn
   kube_config       = module.aks-cluster.kube_config
-  public_key_data   = coalesce(var.pubkey_data, data.local_file.pubkey_path.content)
+  public_key_data   = var.pubkey_data
   depends_on        = [module.network, module.aks-cluster]
 }
 
