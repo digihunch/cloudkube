@@ -14,7 +14,6 @@ module "network" {
   resource_tags   = var.Tags
 }
 
-
 module "bastion" {
   source = "./modules/bastion"
   mgmt_subnet_id = module.network.vpc_info.mgmt_subnet_id 
