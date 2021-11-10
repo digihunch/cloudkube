@@ -53,9 +53,10 @@ resource "azurerm_kubernetes_cluster" "default" {
       enabled                    = true
       log_analytics_workspace_id = var.aks_laws_id
     }
-    kube_dashboard {
-      enabled = true
-    }
+    # kube_dashboard is deprecated starting 1.19
+    #kube_dashboard {
+    #  enabled = true
+    #}
     azure_policy {
       enabled = true
     }
