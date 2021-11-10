@@ -27,7 +27,6 @@ module "aks-cluster" {
   resource_prefix              = random_pet.prefix.id
   resource_tags                = var.Tags
   aks_kubernetes_version       = "1.21.2"
-  aks_network_plugin           = "azure"
   aks_ad_admin_group_object_id = [var.AdminGroupGUID]
   aks_pod_subnet_id            = module.network.pod_subnet_id
   aks_node_subnet_id           = module.network.node_subnet_id

@@ -44,12 +44,17 @@ resource "azurerm_kubernetes_cluster" "default" {
   }
 
   network_profile {
-    network_plugin = var.aks_network_plugin
+    network_plugin = "azure" 
+    network_policy = "calico"
+    outbound_type = "userDefinedRouting"
   }
 
   #azure_policy {
   #  enabled = true
   #}
+  kube_dashboard {
+    enabled = true
+  }
   addon_profile {
     oms_agent {
       enabled                    = true

@@ -11,9 +11,6 @@ variable "aks_kubernetes_version" {
   type    = string
   default = "1.21.2"
 }
-variable "aks_network_plugin" {
-  type = string
-}
 variable "aks_ad_admin_group_object_id" {
   type = list(string)
 }
