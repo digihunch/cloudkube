@@ -62,8 +62,8 @@ resource "azurerm_kubernetes_cluster" "default" {
   }
 
   auto_scaler_profile {
-    scan_interval = "1m"
-    scale_down_unneeded = "10m"
+    scan_interval = 1m
+    scale_down_unneeded = 10m
   }
   tags = var.resource_tags
 }
