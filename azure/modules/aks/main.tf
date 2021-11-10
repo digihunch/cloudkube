@@ -48,19 +48,22 @@ resource "azurerm_kubernetes_cluster" "default" {
     network_policy = "calico"
     outbound_type = "userDefinedRouting"
   }
-
-  #azure_policy {
-  #  enabled = true
-  #}
-  kube_dashboard {
-    enabled = true
-  }
   addon_profile {
     oms_agent {
       enabled                    = true
       log_analytics_workspace_id = var.aks_laws_id
     }
+    kube_dashboard {
+      enabled = true
+    }
+    azure_policy {
+      enabled = true
+    }
   }
 
+  auto_scaler_profile {
+    scan_interval = "1m"
+    scale_down_unneeded = "10m"
+  }
   tags = var.resource_tags
 }
