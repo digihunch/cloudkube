@@ -27,11 +27,11 @@ module "aks-cluster" {
   resource_prefix = random_pet.prefix.id
   resource_tags   = var.Tags
   aks_spec = {
-    cluster_name              = "aks_cluster_main"
-    kubernetes_version        = "1.21.2"
-    pod_subnet_id             = module.network.pod_subnet_id
-    node_subnet_id            = module.network.node_subnet_id
-    lb_subnet_id              = "123"
+    cluster_name       = "aks_cluster_main"
+    kubernetes_version = "1.21.2"
+    pod_subnet_id      = module.network.pod_subnet_id
+    node_subnet_id     = module.network.node_subnet_id
+    #lb_subnet_id              = module.network.lb_subnet_id
     admin_group_ad_object_ids = [var.AdminGroupGUID]
     system_node_pool = {
       name                                = "sysnp0"

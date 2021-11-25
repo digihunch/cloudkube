@@ -1,3 +1,6 @@
+output "lb_subnet_id" {
+  value = azurerm_subnet.lb_subnet.id
+}
 output "node_subnet_id" {
   value = azurerm_subnet.node_subnet.id
 }

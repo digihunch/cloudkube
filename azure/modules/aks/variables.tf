@@ -17,7 +17,6 @@ variable "aks_spec" {
     kubernetes_version        = string,
     pod_subnet_id             = string,
     node_subnet_id            = string,
-    lb_subnet_id              = string,
     admin_group_ad_object_ids = list(string),
     system_node_pool = object({
       name                                = string,
@@ -62,7 +61,6 @@ variable "aks_spec" {
     kubernetes_version        = "1.20.1"
     pod_subnet_id             = "unknown"
     node_subnet_id            = "unknown"
-    lb_subnet_id              = "unknown"
     admin_group_ad_object_ids = ["admin_group_object_id"]
     system_node_pool = {
       name                                = "sysnp"

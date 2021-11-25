@@ -6,6 +6,15 @@ resource "azurerm_virtual_network" "vnet" {
   tags                = var.resource_tags
 }
 
+# to use load balancer subnet, annotate Service object accordingly
+# https://docs.microsoft.com/en-us/azure/aks/internal-lb#specify-a-different-subnet
+resource "azurerm_subnet" "lb_subnet" {
+  name                 = "${var.resource_prefix}-lb-subnet"
+  resource_group_name  = data.azurerm_resource_group.default.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = [local.default_cidrs.lb_subnet_cidr]
+}
+
 resource "azurerm_subnet" "node_subnet" {
   name                 = "${var.resource_prefix}-node-subnet"
   resource_group_name  = data.azurerm_resource_group.default.name
@@ -25,6 +34,28 @@ resource "azurerm_subnet" "mgmt_subnet" {
   resource_group_name  = data.azurerm_resource_group.default.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = [local.default_cidrs.mgmt_subnet_cidr]
+}
+
+resource "azurerm_network_security_group" "lb_nsg" {
+  name                = "${var.resource_prefix}-lb-nsg"
+  location            = data.azurerm_resource_group.default.location
+  resource_group_name = data.azurerm_resource_group.default.name
+
+  dynamic "security_rule" {
+    for_each = local.lb_sec_rules
+    content {
+      name                       = security_rule.value["name"]
+      priority                   = security_rule.value["priority"]
+      direction                  = security_rule.value["direction"]
+      access                     = security_rule.value["access"]
+      protocol                   = security_rule.value["protocol"]
+      source_port_range          = security_rule.value["source_port_range"]
+      destination_port_range     = security_rule.value["destination_port_range"]
+      source_address_prefix      = security_rule.value["source_address_prefix"]
+      destination_address_prefix = security_rule.value["destination_address_prefix"]
+    }
+  }
+  tags = var.resource_tags
 }
 
 resource "azurerm_network_security_group" "node_nsg" {
