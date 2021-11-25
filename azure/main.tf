@@ -22,47 +22,57 @@ module "event-hub" {
 }
 
 module "aks-cluster" {
-  source                       = "./modules/aks"
-  resource_group               = var.ResourceGroup
-  resource_prefix              = random_pet.prefix.id
-  resource_tags                = var.Tags
-  #aks_kubernetes_version       = "1.21.2"
-  #aks_ad_admin_group_object_id = [var.AdminGroupGUID]
-  #aks_pod_subnet_id            = module.network.pod_subnet_id
-  #aks_node_subnet_id           = module.network.node_subnet_id
+  source          = "./modules/aks"
+  resource_group  = var.ResourceGroup
+  resource_prefix = random_pet.prefix.id
+  resource_tags   = var.Tags
   aks_spec = {
-    cluster_name = "aks_cluster_main"
-    kubernetes_version = "1.21.2"
-    pod_subnet_id = module.network.pod_subnet_id
-    node_subnet_id = module.network.node_subnet_id
-    lb_subnet_id = "123"
+    cluster_name              = "aks_cluster_main"
+    kubernetes_version        = "1.21.2"
+    pod_subnet_id             = module.network.pod_subnet_id
+    node_subnet_id            = module.network.node_subnet_id
+    lb_subnet_id              = "123"
     admin_group_ad_object_ids = [var.AdminGroupGUID]
     system_node_pool = {
-      name = "sysnp0"
-      vm_size = "Standard_A8_v2"
-      zones = ["1","2","3"]
-      node_count = 3
-      cluster_auto_scaling = false
+      name                                = "sysnp0"
+      vm_size                             = "Standard_A2_v2"
+      zones                               = ["1", "2", "3"]
+      node_count                          = 1
+      cluster_auto_scaling                = false
       cluster_auto_scaling_min_node_count = 3
       cluster_auto_scaling_max_node_count = 3
     }
     workload_node_pools = [{
-      name = "wlnp1"
-      vm_size = "Standard_A8_v2"
-      zones = ["1","2","3"]
-      node_count = 3
-      cluster_auto_scaling = true
+      name                                = "wlnp1"
+      vm_size                             = "Standard_A2_v2"
+      zones                               = ["1", "2", "3"]
+      node_count                          = 3
+      cluster_auto_scaling                = true
       cluster_auto_scaling_min_node_count = 3
       cluster_auto_scaling_max_node_count = 9
     }]
     auto_scaler_profile = {
-      balance_similar_node_groups = false,
-      max_unready_nodes = 3,
-      scale_down_unready = "20m",
+      balance_similar_node_groups      = false,
+      expander                         = "random",
+      max_graceful_termination_sec     = 600,
+      max_node_provisioning_time       = "15m",
+      max_unready_nodes                = 3,
+      max_unready_percentage           = 45,
+      new_pod_scale_up_delay           = "10s",
+      scale_down_delay_after_add       = "10m",
+      scale_down_delay_after_delete    = "10s",
+      scale_down_delay_after_failure   = "3m",
+      scan_interval                    = "10s",
+      scale_down_unneeded              = "10m",
+      scale_down_unready               = "20m",
+      scale_down_utilization_threshold = 0.5,
+      empty_bulk_delete_max            = 10,
+      skip_nodes_with_local_storage    = true,
+      skip_nodes_with_system_pods      = true,
     }
   }
-  aks_laws_id                  = module.log-analytics.laws_id
-  depends_on                   = [module.network, module.log-analytics]
+  aks_laws_id = module.log-analytics.laws_id
+  depends_on  = [module.network, module.log-analytics]
 }
 
 module "bastion" {

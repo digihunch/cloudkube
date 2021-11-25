@@ -14,5 +14,5 @@ variable "pubkey_data" {
   default = null
 }
 variable "AdminGroupGUID" {
-  type    = string
+  type = string
 }

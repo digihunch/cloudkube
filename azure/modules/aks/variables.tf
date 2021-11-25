@@ -7,85 +7,99 @@ variable "resource_prefix" {
 variable "resource_tags" {
   type = map(any)
 }
-#variable "aks_kubernetes_version" {
-#  type    = string
-#  default = "1.21.2"
-#}
-#variable "aks_ad_admin_group_object_id" {
-#  type = list(string)
-#}
 variable "aks_laws_id" {
   type = string
 }
-#variable "aks_pod_subnet_id" {
-#  type = string
-#}
-#variable "aks_node_subnet_id" {
-#  type = string
-#}
-
 variable "aks_spec" {
   description = "AKS specification"
-  type = object ({
-    cluster_name = string,
-    kubernetes_version = string,
-    pod_subnet_id = string,
-    node_subnet_id = string,
-    lb_subnet_id = string,
+  type = object({
+    cluster_name              = string,
+    kubernetes_version        = string,
+    pod_subnet_id             = string,
+    node_subnet_id            = string,
+    lb_subnet_id              = string,
     admin_group_ad_object_ids = list(string),
     system_node_pool = object({
-      name = string,
-      vm_size = string,
-      zones = list(string),
-      node_count = number,
-      cluster_auto_scaling = bool,
-      cluster_auto_scaling_min_node_count = number,      
-      cluster_auto_scaling_max_node_count = number,      
+      name                                = string,
+      vm_size                             = string,
+      zones                               = list(string),
+      node_count                          = number,
+      cluster_auto_scaling                = bool,
+      cluster_auto_scaling_min_node_count = number,
+      cluster_auto_scaling_max_node_count = number,
     }),
     workload_node_pools = list(object({
-      name = string,
-      vm_size = string,
-      zones = list(string),
-      node_count = number,
-      cluster_auto_scaling = bool,
-      cluster_auto_scaling_min_node_count = number,      
-      cluster_auto_scaling_max_node_count = number,      
+      name                                = string,
+      vm_size                             = string,
+      zones                               = list(string),
+      node_count                          = number,
+      cluster_auto_scaling                = bool,
+      cluster_auto_scaling_min_node_count = number,
+      cluster_auto_scaling_max_node_count = number,
     })),
     auto_scaler_profile = object({
-      balance_similar_node_groups = bool,
-      max_unready_nodes = number,
-      scale_down_unready = string,
+      balance_similar_node_groups      = bool,
+      expander                         = string,
+      max_graceful_termination_sec     = number,
+      max_node_provisioning_time       = string,
+      max_unready_nodes                = number,
+      max_unready_percentage           = number,
+      new_pod_scale_up_delay           = string,
+      scale_down_delay_after_add       = string,
+      scale_down_delay_after_delete    = string,
+      scale_down_delay_after_failure   = string,
+      scan_interval                    = string,
+      scale_down_unneeded              = string,
+      scale_down_unready               = string,
+      scale_down_utilization_threshold = number,
+      empty_bulk_delete_max            = number,
+      skip_nodes_with_local_storage    = bool,
+      skip_nodes_with_system_pods      = bool,
     })
   })
   default = {
-    cluster_name = "default_cluster"
-    kubernetes_version = "1.20.1" 
-    pod_subnet_id = "unknown"
-    node_subnet_id = "unknown"
-    lb_subnet_id = "unknown"
+    cluster_name              = "default_cluster"
+    kubernetes_version        = "1.20.1"
+    pod_subnet_id             = "unknown"
+    node_subnet_id            = "unknown"
+    lb_subnet_id              = "unknown"
     admin_group_ad_object_ids = ["admin_group_object_id"]
     system_node_pool = {
-      name = "sysnp"
-      vm_size = "Standard_A8_v2"
-      zones = ["1","2","3"] 
-      node_count = 3
-      cluster_auto_scaling = false,
-      cluster_auto_scaling_min_node_count = 3,      
-      cluster_auto_scaling_max_node_count = 3,      
+      name                                = "sysnp"
+      vm_size                             = "Standard_A8_v2"
+      zones                               = ["1", "2", "3"]
+      node_count                          = 3
+      cluster_auto_scaling                = false,
+      cluster_auto_scaling_min_node_count = 3,
+      cluster_auto_scaling_max_node_count = 3,
     }
     workload_node_pools = [{
-      name = "wlnp"
-      vm_size = "Standard_A8_v2"
-      zones = ["1","2","3"]
-      node_count = 3
-      cluster_auto_scaling = true,
+      name                                = "wlnp"
+      vm_size                             = "Standard_A8_v2"
+      zones                               = ["1", "2", "3"]
+      node_count                          = 3
+      cluster_auto_scaling                = true,
       cluster_auto_scaling_min_node_count = 3,
-      cluster_auto_scaling_max_node_count = 9,      
+      cluster_auto_scaling_max_node_count = 9,
     }]
     auto_scaler_profile = {
-      balance_similar_node_groups = false,
-      max_unready_nodes = 3,
-      scale_down_unready = "20m",
+      balance_similar_node_groups      = false,
+      expander                         = "random",
+      max_graceful_termination_sec     = 600,
+      max_node_provisioning_time       = "15m",
+      max_unready_nodes                = 3,
+      max_unready_percentage           = 45,
+      new_pod_scale_up_delay           = "10s",
+      scale_down_delay_after_add       = "10m",
+      scale_down_delay_after_delete    = "10s",
+      scale_down_delay_after_failure   = "3m",
+      scan_interval                    = "10s",
+      scale_down_unneeded              = "10m",
+      scale_down_unready               = "20m",
+      scale_down_utilization_threshold = 0.5,
+      empty_bulk_delete_max            = 10,
+      skip_nodes_with_local_storage    = true,
+      skip_nodes_with_system_pods      = true,
     }
   }
 }
