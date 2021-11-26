@@ -98,9 +98,43 @@ module "diag-setting" {
   source          = "./modules/diag-setting"
   resource_prefix = random_pet.prefix.id
   resource_tags   = var.Tags
-  ds_eh_aks_id    = module.aks-cluster.kubernetes_cluster_id
-  ds_laws_id      = module.log-analytics.laws_id
-  ds_eh_name      = module.event-hub.eventhub_name
-  ds_ehar_id      = module.event-hub.eventhub_authn_rule_id
-  depends_on      = [module.event-hub, module.log-analytics, module.aks-cluster]
+  ds_laws = {
+    laws_id         = module.log-analytics.laws_id
+    tgt_resource_id = module.aks-cluster.kubernetes_cluster_id
+    logs = [{
+      category          = "kube-scheduler"
+      enabled           = true
+      retention_enabled = false
+      retention_days    = 30
+      }, {
+      category          = "kube-apiserver"
+      enabled           = true
+      retention_enabled = false
+      retention_days    = 30
+    }],
+    metric = {
+      category          = "AllMetrics"
+      enabled           = true
+      retention_enabled = false
+      retention_days    = 30
+    }
+  }
+
+  ds_eventhub = {
+    eventhub_name   = module.event-hub.eventhub_name
+    eh_auth_rule_id = module.event-hub.eventhub_authn_rule_id
+    tgt_resource_id = module.aks-cluster.kubernetes_cluster_id
+    logs = [{
+      category          = "kube-scheduler"
+      enabled           = true
+      retention_enabled = false
+      retention_days    = 30
+      }, {
+      category          = "kube-apiserver"
+      enabled           = true
+      retention_enabled = false
+      retention_days    = 30
+    }]
+  }
+  depends_on = [module.event-hub, module.log-analytics, module.aks-cluster]
 }

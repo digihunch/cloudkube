@@ -14,7 +14,6 @@ data "template_file" "cloud_init_sh" {
 data "template_cloudinit_config" "init_config" {
   gzip          = true
   base64_encode = true
-
   part {
     filename     = "cloud-init"
     content_type = "text/x-shellscript"

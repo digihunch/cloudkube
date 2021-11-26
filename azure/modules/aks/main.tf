@@ -82,7 +82,6 @@ resource "azurerm_kubernetes_cluster" "default" {
   }
   tags = var.resource_tags
 }
-
 resource "azurerm_kubernetes_cluster_node_pool" "workload_node_pool" {
   for_each              = { for node_pool in var.aks_spec.workload_node_pools : node_pool.name => node_pool }
   name                  = each.key
