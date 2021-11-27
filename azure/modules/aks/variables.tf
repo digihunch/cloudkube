@@ -7,9 +7,9 @@ variable "resource_prefix" {
 variable "resource_tags" {
   type = map(any)
 }
-variable "aks_laws_id" {
-  type = string
-}
+#variable "aks_laws_id" {
+#  type = string
+#}
 variable "aks_spec" {
   description = "AKS specification"
   type = object({
@@ -17,6 +17,7 @@ variable "aks_spec" {
     kubernetes_version        = string,
     pod_subnet_id             = string,
     node_subnet_id            = string,
+    laws_id                   = string,
     admin_group_ad_object_ids = list(string),
     system_node_pool = object({
       name                                = string,
@@ -26,7 +27,7 @@ variable "aks_spec" {
       cluster_auto_scaling                = bool,
       cluster_auto_scaling_min_node_count = number,
       cluster_auto_scaling_max_node_count = number,
-      node_labels = map(any)
+      node_labels                         = map(any)
     }),
     workload_node_pools = list(object({
       name                                = string,
@@ -36,7 +37,7 @@ variable "aks_spec" {
       cluster_auto_scaling                = bool,
       cluster_auto_scaling_min_node_count = number,
       cluster_auto_scaling_max_node_count = number,
-      node_labels = map(any) 
+      node_labels                         = map(any)
     })),
     auto_scaler_profile = object({
       balance_similar_node_groups      = bool,
@@ -63,6 +64,7 @@ variable "aks_spec" {
     kubernetes_version        = "1.20.1"
     pod_subnet_id             = "unknown"
     node_subnet_id            = "unknown"
+    laws_id                   = "unknown"
     admin_group_ad_object_ids = ["admin_group_object_id"]
     system_node_pool = {
       name                                = "sysnp"
@@ -73,7 +75,7 @@ variable "aks_spec" {
       cluster_auto_scaling_min_node_count = 3,
       cluster_auto_scaling_max_node_count = 3,
       node_labels = {
-        pool_name = "sysnp00" 
+        pool_name = "sysnp00"
       }
     }
     workload_node_pools = [{
@@ -85,7 +87,7 @@ variable "aks_spec" {
       cluster_auto_scaling_min_node_count = 3,
       cluster_auto_scaling_max_node_count = 9,
       node_labels = {
-        pool_name = "nodenp01" 
+        pool_name = "nodenp01"
       }
     }]
     auto_scaler_profile = {

@@ -31,7 +31,7 @@ module "aks-cluster" {
     kubernetes_version = "1.21.2"
     pod_subnet_id      = module.network.pod_subnet_id
     node_subnet_id     = module.network.node_subnet_id
-    #lb_subnet_id              = module.network.lb_subnet_id
+    laws_id            = module.log-analytics.laws_id
     admin_group_ad_object_ids = [var.AdminGroupGUID]
     system_node_pool = {
       name                                = "sysnp0"
@@ -42,7 +42,7 @@ module "aks-cluster" {
       cluster_auto_scaling_min_node_count = 3
       cluster_auto_scaling_max_node_count = 3
       node_labels = {
-        pool_name = "system-np"
+        pool_name          = "system-np"
         "px/metadata-node" = "true"
       }
     }
@@ -78,8 +78,7 @@ module "aks-cluster" {
       skip_nodes_with_system_pods      = true,
     }
   }
-  aks_laws_id = module.log-analytics.laws_id
-  depends_on  = [module.network, module.log-analytics]
+  depends_on = [module.network, module.log-analytics]
 }
 
 module "bastion" {

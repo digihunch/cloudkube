@@ -13,7 +13,7 @@ resource "azurerm_kubernetes_cluster" "default" {
   kubernetes_version                  = var.aks_spec.kubernetes_version
   private_cluster_enabled             = true
   private_cluster_public_fqdn_enabled = true
-  node_resource_group = "${data.azurerm_resource_group.default.name}-${var.resource_prefix}-${var.aks_spec.cluster_name}-node"
+  node_resource_group                 = "${data.azurerm_resource_group.default.name}-${var.resource_prefix}-${var.aks_spec.cluster_name}-node"
 
   default_node_pool {
     name                = var.aks_spec.system_node_pool.name
@@ -50,12 +50,12 @@ resource "azurerm_kubernetes_cluster" "default" {
   network_profile {
     network_plugin = "azure"
     network_policy = "calico"
-    #outbound_type = "userDefinedRouting" # UDR requires firewall IP. 
+    #outbound_type = "userDefinedRouting" # UDR requires presence of a route for subnet pointing to firewall IP. 
   }
   addon_profile {
     oms_agent {
-      enabled                    = true
-      log_analytics_workspace_id = var.aks_laws_id
+      enabled                    = var.aks_spec.laws_id != null
+      log_analytics_workspace_id = var.aks_spec.laws_id
     }
     # kube_dashboard is deprecated starting 1.19
     azure_policy {
@@ -98,7 +98,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload_node_pool" {
   min_count             = each.value.cluster_auto_scaling ? each.value.cluster_auto_scaling_min_node_count : null
   #proximity_placement_group_id = azurerm_proximity_placement_group.default.id # placement group can map to only one AZ 
   # enable_host_encryption = true # this is not supported for certain instance types
-  mode = "User"
+  mode        = "User"
   node_labels = each.value.node_labels
-  tags = var.resource_tags
+  tags        = var.resource_tags
 }
