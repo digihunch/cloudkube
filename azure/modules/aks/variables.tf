@@ -26,6 +26,7 @@ variable "aks_spec" {
       cluster_auto_scaling                = bool,
       cluster_auto_scaling_min_node_count = number,
       cluster_auto_scaling_max_node_count = number,
+      node_labels = map(any)
     }),
     workload_node_pools = list(object({
       name                                = string,
@@ -35,6 +36,7 @@ variable "aks_spec" {
       cluster_auto_scaling                = bool,
       cluster_auto_scaling_min_node_count = number,
       cluster_auto_scaling_max_node_count = number,
+      node_labels = map(any) 
     })),
     auto_scaler_profile = object({
       balance_similar_node_groups      = bool,
@@ -70,6 +72,9 @@ variable "aks_spec" {
       cluster_auto_scaling                = false,
       cluster_auto_scaling_min_node_count = 3,
       cluster_auto_scaling_max_node_count = 3,
+      node_labels = {
+        pool_name = "sysnp00" 
+      }
     }
     workload_node_pools = [{
       name                                = "wlnp"
@@ -79,6 +84,9 @@ variable "aks_spec" {
       cluster_auto_scaling                = true,
       cluster_auto_scaling_min_node_count = 3,
       cluster_auto_scaling_max_node_count = 9,
+      node_labels = {
+        pool_name = "nodenp01" 
+      }
     }]
     auto_scaler_profile = {
       balance_similar_node_groups      = false,

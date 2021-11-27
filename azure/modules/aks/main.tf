@@ -13,6 +13,7 @@ resource "azurerm_kubernetes_cluster" "default" {
   kubernetes_version                  = var.aks_spec.kubernetes_version
   private_cluster_enabled             = true
   private_cluster_public_fqdn_enabled = true
+  node_resource_group = "${data.azurerm_resource_group.default.name}-${var.resource_prefix}-${var.aks_spec.cluster_name}-node"
 
   default_node_pool {
     name                = var.aks_spec.system_node_pool.name
@@ -29,6 +30,7 @@ resource "azurerm_kubernetes_cluster" "default" {
 
     availability_zones = var.aks_spec.system_node_pool.zones
     # https://docs.microsoft.com/en-us/azure/aks/availability-zones#verify-node-distribution-across-zones
+    node_labels = var.aks_spec.system_node_pool.node_labels
   }
 
   identity {
@@ -97,5 +99,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload_node_pool" {
   #proximity_placement_group_id = azurerm_proximity_placement_group.default.id # placement group can map to only one AZ 
   # enable_host_encryption = true # this is not supported for certain instance types
   mode = "User"
+  node_labels = each.value.node_labels
   tags = var.resource_tags
 }
