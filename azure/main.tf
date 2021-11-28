@@ -27,11 +27,11 @@ module "aks-cluster" {
   resource_prefix = random_pet.prefix.id
   resource_tags   = var.Tags
   aks_spec = {
-    cluster_name       = "aks_cluster_main"
-    kubernetes_version = "1.21.2"
-    pod_subnet_id      = module.network.pod_subnet_id
-    node_subnet_id     = module.network.node_subnet_id
-    laws_id            = module.log-analytics.laws_id
+    cluster_name              = "aks_cluster_main"
+    kubernetes_version        = "1.21.2"
+    pod_subnet_id             = module.network.pod_subnet_id
+    node_subnet_id            = module.network.node_subnet_id
+    laws_id                   = module.log-analytics.laws_id
     admin_group_ad_object_ids = [var.AdminGroupGUID]
     system_node_pool = {
       name                                = "sysnp0"
@@ -95,8 +95,10 @@ module "bastion" {
 
 module "aks-rbac" {
   source                   = "./modules/rbac"
+  resource_group           = var.ResourceGroup
   rbac_principal_object_id = var.AdminGroupGUID
-  rbac_aks_id              = module.aks-cluster.kubernetes_cluster_id
+  rbac_aks_cluster_id      = module.aks-cluster.kubernetes_cluster_id
+  rbac_aks_principal_id    = module.aks-cluster.aks_identity_principal_id
   depends_on               = [module.aks-cluster]
 }
 
