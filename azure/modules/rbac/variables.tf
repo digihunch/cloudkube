@@ -10,3 +10,6 @@ variable "rbac_aks_cluster_id" {
 variable "rbac_aks_principal_id" {
   type = string
 }
+variable "rbac_aks_node_resource_group" {
+  type = string
+}

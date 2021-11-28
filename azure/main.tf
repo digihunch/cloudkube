@@ -94,12 +94,13 @@ module "bastion" {
 }
 
 module "aks-rbac" {
-  source                   = "./modules/rbac"
-  resource_group           = var.ResourceGroup
-  rbac_principal_object_id = var.AdminGroupGUID
-  rbac_aks_cluster_id      = module.aks-cluster.kubernetes_cluster_id
-  rbac_aks_principal_id    = module.aks-cluster.aks_identity_principal_id
-  depends_on               = [module.aks-cluster]
+  source                       = "./modules/rbac"
+  resource_group               = var.ResourceGroup
+  rbac_principal_object_id     = var.AdminGroupGUID
+  rbac_aks_cluster_id          = module.aks-cluster.kubernetes_cluster_id
+  rbac_aks_principal_id        = module.aks-cluster.aks_identity_principal_id
+  rbac_aks_node_resource_group = module.aks-cluster.aks_node_resource_group
+  depends_on                   = [module.aks-cluster]
 }
 
 module "diag-setting" {

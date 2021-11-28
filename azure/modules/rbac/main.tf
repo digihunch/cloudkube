@@ -24,3 +24,9 @@ resource "azurerm_role_assignment" "networkcontributor_assignment" {
   principal_id                     = var.rbac_aks_principal_id
   skip_service_principal_aad_check = true
 }
+resource "azurerm_role_assignment" "nodergcontributor_assignment" {
+  role_definition_name             = "Contributor"
+  scope                            = data.azurerm_resource_group.node_resource_group.id
+  principal_id                     = var.rbac_aks_principal_id
+  skip_service_principal_aad_check = true
+}
