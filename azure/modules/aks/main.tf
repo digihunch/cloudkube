@@ -61,6 +61,12 @@ resource "azurerm_kubernetes_cluster" "default" {
     azure_policy {
       enabled = true
     }
+    ingress_application_gateway {
+      enabled = false
+    }
+    http_application_routing {
+      enabled = false
+    }
   }
 
   auto_scaler_profile {
