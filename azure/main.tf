@@ -43,7 +43,6 @@ module "aks-cluster" {
       cluster_auto_scaling_max_node_count = 3
       node_labels = {
         pool_name          = "system-np"
-        "px/metadata-node" = "true"
       }
     }
     workload_node_pools = [{
@@ -56,6 +55,7 @@ module "aks-cluster" {
       cluster_auto_scaling_max_node_count = 9
       node_labels = {
         pool_name = "workload-np01"
+        "px/metadata-node" = "true"
       }
     }]
     auto_scaler_profile = {
