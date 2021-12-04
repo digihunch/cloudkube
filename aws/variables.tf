@@ -10,3 +10,7 @@ variable "pubkey_data" {
   type    = string
   default = null
 }
+variable "pubkey_path" {
+  type    = string
+  default = "~/.ssh/id_rsa.pub"
+}
