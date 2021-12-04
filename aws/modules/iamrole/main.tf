@@ -16,5 +16,5 @@ resource "aws_iam_role" "ec2_iam_role" {
   ]
 }
 EOF
-  tags = var.resource_tags
+  tags               = var.resource_tags
 }

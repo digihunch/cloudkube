@@ -1,16 +1,12 @@
 data "aws_region" "this" {}
 
-data "aws_iam_role" "instance_role" {
-  name = var.role_name
-}
-
 data "aws_subnet" "mgmt_subnet" {
   id = var.mgmt_subnet_id
 }
 
 data "aws_ami" "amazon_linux" {
   most_recent = true
-  owners = [ "amazon" ]
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -21,7 +17,7 @@ data "aws_ami" "amazon_linux" {
 data "template_file" "myuserdata" {
   template = file("${path.module}/myuserdata.tpl")
   vars = {
-    aws_region  = data.aws_region.this.name 
+    aws_region = data.aws_region.this.name
   }
 }
 
