@@ -12,6 +12,15 @@ module "network" {
   resource_prefix         = random_pet.prefix.id
 }
 
+module "eks" {
+  source = "./modules/eks"
+  node_subnet_id1 = module.network.vpc_info.node_subnet_id_1
+  node_subnet_id2 = module.network.vpc_info.node_subnet_id_2
+  pod_subnet_id =  module.network.vpc_info.pod_subnet_id 
+  resource_tags = var.Tags
+  resource_prefix = random_pet.prefix.id
+}
+
 module "bastion" {
   source          = "./modules/bastion"
   mgmt_subnet_id  = module.network.vpc_info.mgmt_subnet_id
