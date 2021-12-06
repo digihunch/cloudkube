@@ -1,7 +1,13 @@
-output "endpoint" {
+output "eks_name" {
+  value = aws_eks_cluster.MainCluster.id
+}
+output "eks_arn" {
+  value = aws_eks_cluster.MainCluster.arn
+}
+output "eks_endpoint" {
   value = aws_eks_cluster.MainCluster.endpoint 
 }
-output "kubeconfig-certificate-authority-data" {
+output "eks_config_certificate" {
   value = aws_eks_cluster.MainCluster.certificate_authority[0].data
 }
 output "eks_tls_certificate" {

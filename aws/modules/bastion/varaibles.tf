@@ -4,6 +4,21 @@ variable "public_key_data" {
 variable "mgmt_subnet_id" {
   type = string
 }
+variable "eks_name" {
+  type = string
+}
+variable "eks_arn" {
+  type = string
+}
+variable "eks_endpoint" {
+  type = string
+}
+variable "eks_config_certificate" {
+  type = string
+}
+variable "eks_tls_certificate" {
+  type = string
+}
 variable "resource_tags" {
   type = map(any)
 }

@@ -1,9 +1,9 @@
 output "bastion_info" {
   value = "ec2-user@${module.bastion.bastion_info}"
 }
-output "cluster_info" {
-  value = module.eks.endpoint
+output "eks_endpoint" {
+  value = module.eks.eks_endpoint
 }
-output "cluster_auth" {
-  value = module.eks.kubeconfig-certificate-authority-data
+output "eks_config_certificate" {
+  value = module.eks.eks_config_certificate
 }

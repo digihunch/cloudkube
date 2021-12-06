@@ -15,12 +15,6 @@ resource "aws_security_group" "bastionsecgrp" {
     protocol    = "tcp"
     cidr_blocks = ["142.0.0.0/8"]
   }
-  #  ingress {
-  #    from_port   = 8
-  #    to_port     = 0
-  #    protocol    = "icmp"
-  #    cidr_blocks = ["142.0.0.0/8"]
-  #  }
   egress {
     from_port   = 0
     to_port     = 0
@@ -51,6 +45,30 @@ EOF
   tags               = var.resource_tags
 }
 
+resource "aws_iam_policy" "bastion_eks_policy" {
+  name = "bastion_eks_policy"
+  description = "haha"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "eks:Describe*",
+        "eks:List*"
+      ],
+      "Effect": "Allow",
+      "Resource": "${var.eks_arn}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_role_policy_attachment" {
+  role = aws_iam_role.ec2_iam_role.name
+  policy_arn = aws_iam_policy.bastion_eks_policy.arn
+}
 resource "aws_iam_instance_profile" "inst_profile" {
   name = "${var.resource_prefix}-inst-profile"
   role = aws_iam_role.ec2_iam_role.name
@@ -58,7 +76,7 @@ resource "aws_iam_instance_profile" "inst_profile" {
 
 resource "aws_instance" "bastion" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = "t3.micro"
+  instance_type          = "t2.micro"
   user_data              = data.template_cloudinit_config.bastion_cloudinit.rendered
   key_name               = aws_key_pair.runner-pubkey.key_name
   vpc_security_group_ids = [aws_security_group.bastionsecgrp.id]

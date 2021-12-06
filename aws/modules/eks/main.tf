@@ -82,6 +82,8 @@ resource "aws_iam_role_policy_attachment" "AmazonEKSCNIPolicyAddonRole" {
 resource "aws_eks_addon" "eks_main_addon" {
   cluster_name = aws_eks_cluster.MainCluster.name
   addon_name   = "vpc-cni"
+  resolve_conflicts = "OVERWRITE"
+  tags = merge(var.resource_tags, { "eks_addon" = "vpc-cni" })
 }
 
 resource "aws_iam_role" "eks_node_iam_role" {

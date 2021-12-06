@@ -18,6 +18,11 @@ data "template_file" "myuserdata" {
   template = file("${path.module}/myuserdata.tpl")
   vars = {
     aws_region = data.aws_region.this.name
+    eks_name = var.eks_name
+    eks_arn = var.eks_arn
+    eks_endpoint = var.eks_endpoint
+    eks_config_certificate = var.eks_config_certificate
+    eks_tls_certificate = var.eks_tls_certificate
   }
 }
 
