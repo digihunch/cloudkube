@@ -86,48 +86,44 @@ resource "aws_eks_addon" "eks_main_addon" {
   tags = merge(var.resource_tags, { "eks_addon" = "vpc-cni" })
 }
 
-#resource "aws_iam_role" "eks_node_iam_role" {
-#  name = "${var.resource_prefix}-eks-node-role"
-#  assume_role_policy = <<POLICY
-#{
-#  "Version": "2012-10-17",
-#  "Statement": [
-#    {
-#      "Effect": "Allow",
-#      "Principal": {
-#        "Service": "ec2.amazonaws.com"
-#      },
-#      "Action": "sts:AssumeRole"
-#    }
-#  ]
-#}
-#POLICY
-#  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Node-Role" })
-#}
+resource "aws_iam_role" "eks_node_iam_role" {
+  name = "${var.resource_prefix}-eks-node-role"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Node-Role" })
+}
 
 resource "aws_iam_role_policy_attachment" "AmazonEKSWorkerNodePolicyNodeRole" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-  #role       = aws_iam_role.eks_node_iam_role.name
-  role       = aws_iam_role.eks_cluster_iam_role.name
+  role       = aws_iam_role.eks_node_iam_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "AmazonEKSCNIPolicyNodeRole" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  #role       = aws_iam_role.eks_node_iam_role.name
-  role       = aws_iam_role.eks_cluster_iam_role.name
+  role       = aws_iam_role.eks_node_iam_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnlyNodeRole" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  #role       = aws_iam_role.eks_node_iam_role.name
-  role       = aws_iam_role.eks_cluster_iam_role.name
+  role       = aws_iam_role.eks_node_iam_role.name
 }
 
 resource "aws_eks_node_group" "sys_ng" {
   cluster_name = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-sys-ng0"
-  #node_role_arn = aws_iam_role.eks_node_iam_role.arn
-  node_role_arn = aws_iam_role.eks_cluster_iam_role.arn
+  node_role_arn = aws_iam_role.eks_node_iam_role.arn
   subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
   scaling_config {
     desired_size = 1
@@ -148,8 +144,7 @@ resource "aws_eks_node_group" "sys_ng" {
 resource "aws_eks_node_group" "biz_ng" {
   cluster_name = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-biz-ng1"
-  #node_role_arn = aws_iam_role.eks_node_iam_role.arn
-  node_role_arn = aws_iam_role.eks_cluster_iam_role.arn
+  node_role_arn = aws_iam_role.eks_node_iam_role.arn
   subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
   scaling_config {
     desired_size = 1

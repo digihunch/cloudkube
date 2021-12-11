@@ -3,7 +3,7 @@ echo "Entering script myuserdata"
 
 echo aws_region=${aws_region}
 echo eks_name=${eks_name}
-echo eks_arn=${eks_arn}
+#echo eks_arn=${eks_arn}
 echo eks_endpoint=${eks_endpoint}
 echo eks_config_certificate=${eks_config_certificate}
 echo eks_tls_certificate=${eks_tls_certificate}
@@ -20,5 +20,5 @@ export PATH=$PATH:$HOME/bin && echo "export PATH=$PATH:$HOME/bin" >> ~/.bashrc'
 runuser -l ec2-user -c 'curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 &&
 chmod 700 get_helm.sh && ./get_helm.sh && rm get_helm.sh'
 
-runuser -l ec2-user -c 'aws configure set region ${aws_region}'
+runuser -l ec2-user -c 'aws configure set region ${aws_region} && aws eks --region us-east-1 update-kubeconfig --name ${eks_name}'
 echo "Leaving script myuserdata"

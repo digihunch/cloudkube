@@ -15,8 +15,7 @@ resource "aws_subnet" "publicsubnet" {
 resource "aws_subnet" "nodesubnet1" {
   vpc_id                  = aws_vpc.eks_vpc.id
   cidr_block              = var.node_subnet1_cidr_block
-  #map_public_ip_on_launch = false
-  map_public_ip_on_launch = true 
+  map_public_ip_on_launch = false
   availability_zone       = data.aws_availability_zones.available.names[1]
   tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnet1" })
 }
@@ -24,8 +23,7 @@ resource "aws_subnet" "nodesubnet1" {
 resource "aws_subnet" "nodesubnet2" {
   vpc_id                  = aws_vpc.eks_vpc.id
   cidr_block              = var.node_subnet2_cidr_block
-  #map_public_ip_on_launch = false
-  map_public_ip_on_launch = true 
+  map_public_ip_on_launch = false
   availability_zone       = data.aws_availability_zones.available.names[2]
   tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnet2" })
 }
@@ -33,8 +31,7 @@ resource "aws_subnet" "nodesubnet2" {
 resource "aws_subnet" "podsubnet" {
   vpc_id                  = aws_vpc.eks_vpc.id
   cidr_block              = var.pod_subnet_cidr_block
-  #map_public_ip_on_launch = false
-  map_public_ip_on_launch = true 
+  map_public_ip_on_launch = false
   availability_zone       = data.aws_availability_zones.available.names[1]
   tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-PodSubnet" })
 }
@@ -84,8 +81,7 @@ resource "aws_route_table" "node_subnet_route_table" {
 resource "aws_route" "node_route_nat_gateway" {
   route_table_id         = aws_route_table.node_subnet_route_table.id
   destination_cidr_block = "0.0.0.0/0"
-  #nat_gateway_id         = aws_nat_gateway.nat_gw.id
-  gateway_id             = aws_internet_gateway.internet_gw.id
+  nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
 
 resource "aws_route_table_association" "node_rt_assoc_1" {
@@ -106,8 +102,7 @@ resource "aws_route_table" "pod_subnet_route_table" {
 resource "aws_route" "pod_route_nat_gateway" {
   route_table_id         = aws_route_table.pod_subnet_route_table.id
   destination_cidr_block = "0.0.0.0/0"
-  #nat_gateway_id         = aws_nat_gateway.nat_gw.id
-  gateway_id             = aws_internet_gateway.internet_gw.id
+  nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
 
 resource "aws_route_table_association" "pod_rt_assoc" {
