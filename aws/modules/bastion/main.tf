@@ -69,9 +69,21 @@ resource "aws_security_group" "bastionsecgrp" {
 #  role = aws_iam_role.ec2_iam_role.name
 #  policy_arn = aws_iam_policy.bastion_eks_policy.arn
 #}
+
+# challenge with accessing API server of private EKS cluster. The control plain URL is not publicly available, and is only accessible from bastion host. we'd have to provision a whole new IAM user, or simply give node role to instance profile.
+# we give bastion instance the node role because the IAM node role is mapped to system:bootstrappers k8s group, out of the box. This ensures that one with SSH access to bastion automatically has privilege as k8s bootstrapper. This technique is arguable 
+ 
+# the entry of configmap aws-auth in out-of-box eks looks like this:
+#mapRoles:
+#----
+#- groups:
+#  - system:bootstrappers
+#  - system:nodes
+#  rolearn: arn:aws:iam::863615190391:role/rich-barnacle-eks-node-role
+#  username: system:node:{{EC2PrivateDNSName}}
+ 
 resource "aws_iam_instance_profile" "inst_profile" {
   name = "${var.resource_prefix}-inst-profile"
-  #role = aws_iam_role.ec2_iam_role.name
   role = var.eks_node_role_name
 }
 
@@ -84,6 +96,5 @@ resource "aws_instance" "bastion" {
   subnet_id              = var.mgmt_subnet_id
   iam_instance_profile   = aws_iam_instance_profile.inst_profile.name
   tags                   = merge(var.resource_tags, { Name = "${var.resource_prefix}-Bastion" })
-#  depends_on             = [aws_iam_role.ec2_iam_role]
 }
 
