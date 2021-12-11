@@ -33,7 +33,8 @@ resource "aws_eks_cluster" "MainCluster" {
   name = "${var.resource_prefix}-eks-cluster"
   role_arn = aws_iam_role.eks_cluster_iam_role.arn
   vpc_config {
-    subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
+    #subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
+    subnet_ids = var.node_subnet_ids
   }
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSClusterPolicy,
@@ -124,7 +125,8 @@ resource "aws_eks_node_group" "sys_ng" {
   cluster_name = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-sys-ng0"
   node_role_arn = aws_iam_role.eks_node_iam_role.arn
-  subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
+  #subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
+  subnet_ids = var.node_subnet_ids
   scaling_config {
     desired_size = 1
     max_size = 1
@@ -145,11 +147,12 @@ resource "aws_eks_node_group" "biz_ng" {
   cluster_name = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-biz-ng1"
   node_role_arn = aws_iam_role.eks_node_iam_role.arn
-  subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
+  #subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
+  subnet_ids = var.node_subnet_ids
   scaling_config {
-    desired_size = 1
-    max_size = 1
-    min_size = 1
+    desired_size = 3
+    max_size = 9
+    min_size = 3
   }
   update_config {
     max_unavailable = 1 

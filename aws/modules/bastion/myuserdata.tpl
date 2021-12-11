@@ -3,7 +3,6 @@ echo "Entering script myuserdata"
 
 echo aws_region=${aws_region}
 echo eks_name=${eks_name}
-#echo eks_arn=${eks_arn}
 echo eks_endpoint=${eks_endpoint}
 echo eks_config_certificate=${eks_config_certificate}
 echo eks_tls_certificate=${eks_tls_certificate}
