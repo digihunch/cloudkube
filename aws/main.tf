@@ -32,4 +32,5 @@ module "bastion" {
   eks_tls_certificate = module.eks.eks_tls_certificate
   resource_tags   = var.Tags
   resource_prefix = random_pet.prefix.id
+  eks_cluster_role_name = module.eks.eks_cluster_role_name
 }

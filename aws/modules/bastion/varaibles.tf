@@ -19,6 +19,9 @@ variable "eks_config_certificate" {
 variable "eks_tls_certificate" {
   type = string
 }
+variable "eks_cluster_role_name" {
+  type = string
+}
 variable "resource_tags" {
   type = map(any)
 }

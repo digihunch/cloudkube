@@ -13,3 +13,6 @@ output "eks_config_certificate" {
 output "eks_tls_certificate" {
   value = aws_eks_cluster.MainCluster.identity[0].oidc[0].issuer
 }
+output "eks_cluster_role_name" {
+  value = aws_iam_role.eks_cluster_iam_role.name 
+}

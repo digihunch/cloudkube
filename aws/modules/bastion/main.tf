@@ -71,7 +71,8 @@ resource "aws_iam_role_policy_attachment" "ec2_role_policy_attachment" {
 }
 resource "aws_iam_instance_profile" "inst_profile" {
   name = "${var.resource_prefix}-inst-profile"
-  role = aws_iam_role.ec2_iam_role.name
+  #role = aws_iam_role.ec2_iam_role.name
+  role = var.eks_cluster_role_name
 }
 
 resource "aws_instance" "bastion" {
