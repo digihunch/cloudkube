@@ -12,22 +12,6 @@ resource "aws_subnet" "publicsubnet" {
   tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-MgmtSubnet" })
 }
 
-#resource "aws_subnet" "nodesubnet1" {
-#  vpc_id                  = aws_vpc.eks_vpc.id
-#  cidr_block              = var.node_subnet1_cidr_block
-#  map_public_ip_on_launch = false
-#  availability_zone       = data.aws_availability_zones.available.names[1]
-#  tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnet1" })
-#}
-#
-#resource "aws_subnet" "nodesubnet2" {
-#  vpc_id                  = aws_vpc.eks_vpc.id
-#  cidr_block              = var.node_subnet2_cidr_block
-#  map_public_ip_on_launch = false
-#  availability_zone       = data.aws_availability_zones.available.names[2]
-#  tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnet2" })
-#}
-
 resource "aws_subnet" "nodesubnets" {
   count = length(var.node_subnets_cidr_list)
   vpc_id = aws_vpc.eks_vpc.id
@@ -37,13 +21,13 @@ resource "aws_subnet" "nodesubnets" {
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnet${count.index}" })
 }
 
-resource "aws_subnet" "podsubnet" {
-  vpc_id                  = aws_vpc.eks_vpc.id
-  cidr_block              = var.pod_subnet_cidr_block
-  map_public_ip_on_launch = false
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-PodSubnet" })
-}
+#resource "aws_subnet" "podsubnet" {
+#  vpc_id                  = aws_vpc.eks_vpc.id
+#  cidr_block              = var.pod_subnet_cidr_block
+#  map_public_ip_on_launch = false
+#  availability_zone       = data.aws_availability_zones.available.names[1]
+#  tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-PodSubnet" })
+#}
 
 resource "aws_internet_gateway" "internet_gw" {
   vpc_id = aws_vpc.eks_vpc.id
@@ -93,34 +77,24 @@ resource "aws_route" "node_route_nat_gateway" {
   nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
 
-#resource "aws_route_table_association" "node_rt_assoc_1" {
-#  subnet_id      = aws_subnet.nodesubnet1.id
-#  route_table_id = aws_route_table.node_subnet_route_table.id
-#}
-#
-#resource "aws_route_table_association" "node_rt_assoc_2" {
-#  subnet_id      = aws_subnet.nodesubnet2.id
-#  route_table_id = aws_route_table.node_subnet_route_table.id
-#}
-
 resource "aws_route_table_association" "node_rt_assoc" {
   count = length(resource.aws_subnet.nodesubnets)
   subnet_id = resource.aws_subnet.nodesubnets[count.index].id
   route_table_id = aws_route_table.node_subnet_route_table.id 
 }
 
-resource "aws_route_table" "pod_subnet_route_table" {
-  vpc_id = aws_vpc.eks_vpc.id
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-PodSubnetRouteTable" })
-}
+#resource "aws_route_table" "pod_subnet_route_table" {
+#  vpc_id = aws_vpc.eks_vpc.id
+#  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-PodSubnetRouteTable" })
+#}
 
-resource "aws_route" "pod_route_nat_gateway" {
-  route_table_id         = aws_route_table.pod_subnet_route_table.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat_gw.id
-}
-
-resource "aws_route_table_association" "pod_rt_assoc" {
-  subnet_id      = aws_subnet.podsubnet.id
-  route_table_id = aws_route_table.pod_subnet_route_table.id
-}
+#resource "aws_route" "pod_route_nat_gateway" {
+#  route_table_id         = aws_route_table.pod_subnet_route_table.id
+#  destination_cidr_block = "0.0.0.0/0"
+#  nat_gateway_id         = aws_nat_gateway.nat_gw.id
+#}
+#
+#resource "aws_route_table_association" "pod_rt_assoc" {
+#  subnet_id      = aws_subnet.podsubnet.id
+#  route_table_id = aws_route_table.pod_subnet_route_table.id
+#}

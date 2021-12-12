@@ -29,13 +29,37 @@ resource "aws_iam_role_policy_attachment" "AmazonEKSVPCResourceController" {
   role       = aws_iam_role.eks_cluster_iam_role.name
 }
 
+resource "aws_security_group" "cluster_security_group" {
+  name = "${var.resource_prefix}-cluster-sg"
+  description = "security group for cluster"
+  vpc_id = var.vpc_id 
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [data.aws_vpc.eksVPC.cidr_block] 
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-Cluster-SG" })
+}
+
 resource "aws_eks_cluster" "MainCluster" {
   name = "${var.resource_prefix}-eks-cluster"
   role_arn = aws_iam_role.eks_cluster_iam_role.arn
   vpc_config {
-    #subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
     subnet_ids = var.node_subnet_ids
+    security_group_ids = compact([aws_security_group.cluster_security_group.id])
+    endpoint_private_access = true
+    endpoint_public_access = false
   }
+#  kubernetes_network_config {
+#    service_ipv4_cidr = "147.206.8.0/24"
+#  }
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSClusterPolicy,
     aws_iam_role_policy_attachment.AmazonEKSVPCResourceController,
@@ -125,7 +149,6 @@ resource "aws_eks_node_group" "sys_ng" {
   cluster_name = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-sys-ng0"
   node_role_arn = aws_iam_role.eks_node_iam_role.arn
-  #subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
   subnet_ids = var.node_subnet_ids
   scaling_config {
     desired_size = 1
@@ -147,7 +170,6 @@ resource "aws_eks_node_group" "biz_ng" {
   cluster_name = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-biz-ng1"
   node_role_arn = aws_iam_role.eks_node_iam_role.arn
-  #subnet_ids = [var.node_subnet_id1, var.node_subnet_id2]
   subnet_ids = var.node_subnet_ids
   scaling_config {
     desired_size = 3

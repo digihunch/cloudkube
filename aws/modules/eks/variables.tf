@@ -1,13 +1,7 @@
-#variable "node_subnet_id1" {
-#  type = string
-#}
-#variable "node_subnet_id2" {
-#  type = string
-#}
 variable "node_subnet_ids" {
   type = list
 }
-variable "pod_subnet_id" {
+variable "vpc_id" {
   type = string
 }
 variable "resource_tags" {
