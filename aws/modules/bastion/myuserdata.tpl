@@ -3,9 +3,6 @@ echo "Entering script myuserdata"
 
 echo aws_region=${aws_region}
 echo eks_name=${eks_name}
-echo eks_endpoint=${eks_endpoint}
-echo eks_config_certificate=${eks_config_certificate}
-echo eks_tls_certificate=${eks_tls_certificate}
 
 yum update -y
 yum install -y nc git jq 
@@ -19,5 +16,10 @@ export PATH=$PATH:$HOME/bin && echo "export PATH=$PATH:$HOME/bin" >> ~/.bashrc'
 runuser -l ec2-user -c 'curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 &&
 chmod 700 get_helm.sh && ./get_helm.sh && rm get_helm.sh'
 
-runuser -l ec2-user -c 'aws configure set region ${aws_region} && aws eks --region us-east-1 update-kubeconfig --name ${eks_name}'
+#runuser -l ec2-user -c 'aws configure set region ${aws_region} && aws eks --region us-east-1 update-kubeconfig --name ${eks_name}'
+
+echo To configure kubectl, edit .saml2aws with app_id, url, username, then run >> /etc/motd
+echo saml2aws login >> /etc/motd
+echo aws eks update-kubeconfig --name ${eks_name} --profile org --region ${aws_region} >> /etc/motd
+
 echo "Leaving script myuserdata"

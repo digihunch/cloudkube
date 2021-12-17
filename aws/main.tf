@@ -25,10 +25,8 @@ module "bastion" {
   mgmt_subnet_id  = module.network.vpc_info.mgmt_subnet_id
   public_key_data = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "")
   eks_name = module.eks.eks_name
-  eks_node_role_name = module.eks.eks_node_role_name
-  eks_endpoint = module.eks.eks_endpoint
-  eks_config_certificate = module.eks.eks_config_certificate
-  eks_tls_certificate = module.eks.eks_tls_certificate
+  eks_arn = module.eks.eks_arn
+  eks_cluster_kubectl_config = module.eks.eks_cluster_kubectl_config
   resource_tags   = var.Tags
   resource_prefix = random_pet.prefix.id
 }

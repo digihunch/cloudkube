@@ -19,9 +19,6 @@ data "template_file" "myuserdata" {
   vars = {
     aws_region = data.aws_region.this.name
     eks_name = var.eks_name
-    eks_endpoint = var.eks_endpoint
-    eks_config_certificate = var.eks_config_certificate
-    eks_tls_certificate = var.eks_tls_certificate
   }
 }
 
