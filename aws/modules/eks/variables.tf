@@ -1,5 +1,5 @@
 variable "node_subnet_ids" {
-  type = list
+  type = list(any)
 }
 variable "vpc_id" {
   type = string

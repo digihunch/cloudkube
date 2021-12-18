@@ -13,12 +13,12 @@ resource "aws_subnet" "publicsubnet" {
 }
 
 resource "aws_subnet" "nodesubnets" {
-  count = length(var.node_subnets_cidr_list)
-  vpc_id = aws_vpc.eks_vpc.id
-  cidr_block = var.node_subnets_cidr_list[count.index] 
+  count                   = length(var.node_subnets_cidr_list)
+  vpc_id                  = aws_vpc.eks_vpc.id
+  cidr_block              = var.node_subnets_cidr_list[count.index]
   map_public_ip_on_launch = false
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnet${count.index}" })
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  tags                    = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnet${count.index}" })
 }
 
 #resource "aws_subnet" "podsubnet" {
@@ -47,7 +47,7 @@ resource "aws_nat_gateway" "nat_gw" {
 
 resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.eks_vpc.id
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-PublicRouteTable" })
+  tags   = merge(var.resource_tags, { Name = "${var.resource_prefix}-PublicRouteTable" })
 }
 
 resource "aws_route" "public_internet_gateway" {
@@ -68,7 +68,7 @@ resource "aws_route_table_association" "pubsub_rt_assoc" {
 
 resource "aws_route_table" "node_subnet_route_table" {
   vpc_id = aws_vpc.eks_vpc.id
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnetRouteTable" })
+  tags   = merge(var.resource_tags, { Name = "${var.resource_prefix}-NodeSubnetRouteTable" })
 }
 
 resource "aws_route" "node_route_nat_gateway" {
@@ -78,9 +78,9 @@ resource "aws_route" "node_route_nat_gateway" {
 }
 
 resource "aws_route_table_association" "node_rt_assoc" {
-  count = length(resource.aws_subnet.nodesubnets)
-  subnet_id = resource.aws_subnet.nodesubnets[count.index].id
-  route_table_id = aws_route_table.node_subnet_route_table.id 
+  count          = length(resource.aws_subnet.nodesubnets)
+  subnet_id      = resource.aws_subnet.nodesubnets[count.index].id
+  route_table_id = aws_route_table.node_subnet_route_table.id
 }
 
 #resource "aws_route_table" "pod_subnet_route_table" {

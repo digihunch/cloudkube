@@ -17,8 +17,9 @@ data "aws_ami" "amazon_linux" {
 data "template_file" "myuserdata" {
   template = file("${path.module}/myuserdata.tpl")
   vars = {
-    aws_region = data.aws_region.this.name
-    eks_name = var.eks_name
+    aws_region           = data.aws_region.this.name
+    eks_name             = var.eks_name
+    oidc_provider_app_id = var.oidc_provider_app_id
   }
 }
 
