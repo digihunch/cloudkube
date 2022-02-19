@@ -28,7 +28,7 @@ module "aks-cluster" {
   resource_tags   = var.Tags
   aks_spec = {
     cluster_name              = "aks_cluster_main"
-    kubernetes_version        = "1.21.2"
+    kubernetes_version        = "1.23.3"
     pod_subnet_id             = module.network.pod_subnet_id
     node_subnet_id            = module.network.node_subnet_id
     laws_id                   = module.log-analytics.laws_id
