@@ -58,7 +58,7 @@ Once testing is completed, to tear downt the cluster, destroy the stack:
 terraform destroy
 ```
 ## AWS Elastic Kubernetes Service
-The template will create a VPC with private subnet and an EKS cluster with Terraform template. A bastion host is created on one of the public subnet of the same VPC, with access to the cluster API server.
+The code is stored in [aws](https://github.com/digihunch/cloudkube/tree/main/aws) directory. The template will create a VPC with private subnet and an EKS cluster with Terraform template. A bastion host is created on one of the public subnet of the same VPC, with access to the cluster API server.
 API server authentication is based on the user AWS IAM user. It is not configured for OIDC integration with any third party identity store.
 
 Since I use saml2aws to log into my AWS account, the following steps is based on this assumption. The bastion host also needs to have saml2aws configured for user to log in correctly, in order to connect to the cluster API server from the bastion host.
