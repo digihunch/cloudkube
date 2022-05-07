@@ -110,7 +110,12 @@ Added new context arn:aws:eks:us-east-1:762497387634:cluster/clean-glider-eks-cl
 ```
 With this we should be able to connect with kubectl:
 ```sh
-kubectl get ns
+kubectl get no
+NAME                            STATUS   ROLES    AGE     VERSION
+ip-147-207-1-27.ec2.internal    Ready    <none>   4m31s   v1.21.5-eks-9017834
+ip-147-207-2-135.ec2.internal   Ready    <none>   4m23s   v1.21.5-eks-9017834
+ip-147-207-2-222.ec2.internal   Ready    <none>   4m17s   v1.21.5-eks-9017834
+ip-147-207-3-8.ec2.internal     Ready    <none>   4m43s   v1.21.5-eks-9017834
 ```
 Once testing is completed, to tear downt the cluster, destroy the stack:
 ```sh
