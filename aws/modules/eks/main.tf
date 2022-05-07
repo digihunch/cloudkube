@@ -69,41 +69,6 @@ resource "aws_eks_cluster" "MainCluster" {
 data "tls_certificate" "eks-cluster-tls-cert" {
   url = aws_eks_cluster.MainCluster.identity[0].oidc[0].issuer
 }
-resource "aws_iam_openid_connect_provider" "eks-add-on-oidc-provider" {
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = [data.tls_certificate.eks-cluster-tls-cert.certificates[0].sha1_fingerprint]
-  url             = aws_eks_cluster.MainCluster.identity[0].oidc[0].issuer
-}
-
-data "aws_iam_policy_document" "eks_addon_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    effect  = "Allow"
-
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(aws_iam_openid_connect_provider.eks-add-on-oidc-provider.url, "https://", "")}:sub"
-      values   = ["system:serviceaccount:kube-system:aws-node"]
-    }
-
-    principals {
-      identifiers = [aws_iam_openid_connect_provider.eks-add-on-oidc-provider.arn]
-      type        = "Federated"
-    }
-  }
-}
-
-resource "aws_iam_role" "eks_addon_iam_role" {
-  name               = "${var.resource_prefix}-eks-addon-role"
-  assume_role_policy = data.aws_iam_policy_document.eks_addon_assume_role_policy.json
-  tags               = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Addon-Role" })
-}
-
-resource "aws_iam_role_policy_attachment" "AmazonEKSCNIPolicyAddonRole" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.eks_addon_iam_role.name
-}
-
 resource "aws_eks_addon" "eks_main_addon" {
   cluster_name      = aws_eks_cluster.MainCluster.name
   addon_name        = "vpc-cni"

@@ -7,14 +7,7 @@ This project does NOT aim to be portable to any client environment because diffe
 ## Azure Kubernetes Service
 The template needs to run by a service principal with sufficient privilege, such as an owner of a target resource group.
 
-The following environment variables are expected for Terraform:
-- ARM_SUBSCRIPTION_ID
-- ARM_CLIENT_ID
-- ARM_CLIENT_SECRET
-- ARM_ENVIRONMENT
-- ARM_TENANT_ID
-
-The terraform code template is stored in the [azure](https://github.com/digihunch/cloudkube/tree/main/azure) directory. The template was tested with Terraform executable. 
+The terraform code template is stored in the [azure](https://github.com/digihunch/cloudkube/tree/main/azure) directory. The template was tested with Terraform executable. The cluster created is integrated with Azure AD. To access the API server using kubectl, you will need to be a member of the AD Group, whose object ID is specified as parameter.
 
 Before deployment, run:
 ```sh
@@ -60,6 +53,62 @@ aks-wlnp1-17983182-vmss000000    Ready    agent   5m18s   v1.23.3
 aks-wlnp1-17983182-vmss000001    Ready    agent   6m28s   v1.23.3
 aks-wlnp1-17983182-vmss000002    Ready    agent   5m39s   v1.23.3
 ```
-
+Once testing is completed, to tear downt the cluster, destroy the stack:
+```sh
+terraform destroy
+```
 ## AWS Elastic Kubernetes Service
-The template will create an EKS cluster with Terraform template
+The template will create a VPC with private subnet and an EKS cluster with Terraform template. A bastion host is created on one of the public subnet of the same VPC, with access to the cluster API server.
+API server authentication is based on the user AWS IAM user. It is not configured for OIDC integration with any third party identity store.
+
+Since I use saml2aws to log into my AWS account, the following steps is based on this assumption. The bastion host also needs to have saml2aws configured for user to log in correctly, in order to connect to the cluster API server from the bastion host.
+
+From your environment, log on to aws using saml2aws:
+```sh
+saml2aws login
+```
+The configuration of saml2aws is stored in ~/.saml2aws file, including the profile name. Suppose the profile name is org.
+```sh
+export AWS_REGION="us-east-1"
+export AWS_PROFILE="org"
+
+terraform init
+terraform plan
+terraform apply
+```
+It can take 20 minutes to create the cluster, at the end, the output will read:
+```sh
+bastion_info = "ec2-user@ec2-44-201-17-43.compute-1.amazonaws.com"
+eks_endpoint = "https://0ED83B8BD5F9550243D5563A8D9E8A92.gr7.us-east-1.eks.amazonaws.com"
+```
+The end point will only be accessible from bastion host. SSH to bastion host. The public key is fetched from your environment (~/.ssh/id_rsa.pub file) so SSH should just work. Once logged onto the bastion host, the motd should read something like:
+
+To configure kubectl, edit .saml2aws with app_id, url, username, then run the following to login again on the bastion host. This will allow the IAM user to configure its kubeconfig:
+```sh
+saml2aws login
+aws eks update-kubeconfig --name clean-glider-eks-cluster --profile org --region us-east-1
+```
+The cluster name in this case is clean-glider-eks-cluster. Once cloud-init has completed, run the two commands as instructed. The second should configure kubeconfig automatically.
+```sh
+[ec2-user@ip-147-207-0-226 ~]$ saml2aws login
+Using IdP Account default to access AzureAD https://account.activedirectory.windowsazure.com
+To use saved password just hit enter.
+? Username first.last@myorg.com
+? Password *************
+
+Authenticating as first.last@myorg.com ...
+Phone approval required.
+Selected role: arn:aws:iam::762497387634:role/my-org-account
+Requesting AWS credentials using SAML assertion.
+Logged in as: arn:aws:sts::762497387634:assumed-role/my-org-account/first.last@myorg.com
+
+Your new access key pair has been stored in the AWS configuration.
+Note that it will expire at 2022-05-07 04:22:38 +0000 UTC
+To use this credential, call the AWS CLI with the --profile option (e.g. aws --profile org ec2 describe-instances).
+[ec2-user@ip-147-207-0-226 ~]$ aws eks update-kubeconfig --name clean-glider-eks-cluster --profile org --region us-east-1
+Added new context arn:aws:eks:us-east-1:762497387634:cluster/clean-glider-eks-cluster to /home/ec2-user/.kube/config
+```
+With this we should be able to connect with kubectl:
+```sh
+kubectl get ns
+```
