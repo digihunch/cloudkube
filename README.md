@@ -13,8 +13,8 @@ Before deployment, run:
 ```sh
 export TF_VAR_ResourceGroup=AutomationTest
 export TF_VAR_AdminGroupGUID=74d661ce-cce6-4aed-830d-5abc732a1132
-export TF_VAR_pubkey_data="ssh-rsa xxxbbrsapublickeyforsshaccess last.first@CLOUDKUBE"
 ```
+The bastion host will load up a public key fetched from your local environment (~/.ssh/id_rsa.pub). If that is not the public key you want to give out, specify the key value in TF_VAR_pubkey_data.
 Then we can login to azure and run terraform from the directory:
 ```sh
 # Log in to Azure, If your environment does not have browsers prompted, use --use-device-code switch
@@ -111,4 +111,8 @@ Added new context arn:aws:eks:us-east-1:762497387634:cluster/clean-glider-eks-cl
 With this we should be able to connect with kubectl:
 ```sh
 kubectl get ns
+```
+Once testing is completed, to tear downt the cluster, destroy the stack:
+```sh
+terraform destroy
 ```

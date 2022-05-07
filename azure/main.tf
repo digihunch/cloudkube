@@ -89,7 +89,7 @@ module "bastion" {
   bastion_subnet_id = module.network.mgmt_subnet_id
   aks_cluster_fqdn  = module.aks-cluster.aks_fqdn
   kube_config       = module.aks-cluster.kube_config
-  public_key_data   = var.pubkey_data
+  public_key_data   = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "") 
   depends_on        = [module.network, module.aks-cluster]
 }
 
