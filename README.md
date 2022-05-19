@@ -34,10 +34,12 @@ kube_config = <sensitive>
 kubernetes_cluster_name = "kind-macaque-aks_cluster_main"
 ```
 
-The first result is the username and public IP of bastion host. The kubernetes cluster is on private subnet and its API server is not publicly accessible. The bastion host has network route to the API server and will have kubectl configured automatically. From your environment SSH to the bastion host, and wait until the cloud init process finish configuring kubectl. You can watch the log for cloud init with:
+The first result is the username and public IP of bastion host. The kubernetes cluster is on private subnet and its API server is not publicly accessible. The bastion host has network route to the API server and will have kubectl configured automatically. From your environment SSH to the bastion host, and wait until the cloud init process finish configuring kubectl. You can watch the log for cloud init with a tail command and initialize kubelogin
 ```sh
 tail -F /var/log/cloud-init-output.log
+kubelogin convert-kubeconfig
 ```
+Since May 2022, we changed to use [kubelogin](https://github.com/Azure/kubelogin) as a helper to kubectl for connection because the azure auth plugin is deprecated in v1.22+ and becomes unavailable in v1.25+. We configured [kubelogin](https://github.com/Azure/kubelogin#device-code-flow-interactive) for interactive login with device code.
 Then we can test kubectl access with a command, which should first prompt you to login to Azure with device code:
 ```sh
 kubectl get no
