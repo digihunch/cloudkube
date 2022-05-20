@@ -14,6 +14,11 @@ Before deployment, run:
 export TF_VAR_ResourceGroup=AutomationTest
 export TF_VAR_AdminGroupGUID=74d661ce-cce6-4aed-830d-5abc732a1132
 ```
+
+The Terraform template will assign the specified Azure AD group as administrator to the newly created AKS cluster. This activity requires owner permission on the AKS cluster. Since the cluster is not created until the Terraform template is run, we need grant the Azure user owner permisson for the whole resource group.
+
+The Azure AD group that is specified as cluster administrator by UUID, must be a [security-enabled] AD group(https://docs.microsoft.com/en-us/graph/api/resources/groups-overview?view=graph-rest-1.0#group-types-in-azure-ad-and-microsoft-graph). Group type of an AD group can be viewed on Azure portal.
+
 The bastion host will load up a public key fetched from your local environment (~/.ssh/id_rsa.pub). If that is not the public key you want to give out, specify the key value in TF_VAR_pubkey_data.
 Then we can login to azure and run terraform from the directory:
 ```sh
