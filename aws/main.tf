@@ -28,6 +28,7 @@ module "bastion" {
   eks_arn                    = module.eks.eks_arn
   eks_cluster_kubectl_config = module.eks.eks_cluster_kubectl_config
   oidc_provider_app_id       = var.oidc_provider_app_id
+  ssh_client_cidr_block      = var.cli_cidr_block
   resource_tags              = var.Tags
   resource_prefix            = random_pet.prefix.id
 }

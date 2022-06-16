@@ -10,6 +10,10 @@ variable "pubkey_data" {
   type    = string
   default = null
 }
+variable "cli_cidr_block" {
+  type    = string
+  default = "0.0.0.0/0"
+}
 variable "pubkey_path" {
   type    = string
   default = "~/.ssh/id_rsa.pub"

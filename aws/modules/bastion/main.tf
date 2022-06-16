@@ -13,7 +13,7 @@ resource "aws_security_group" "bastionsecgrp" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["142.0.0.0/8"]
+    cidr_blocks = [var.ssh_client_cidr_block]
   }
   egress {
     from_port   = 0

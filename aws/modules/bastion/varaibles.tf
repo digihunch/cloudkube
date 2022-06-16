@@ -1,3 +1,6 @@
+variable "ssh_client_cidr_block" {
+  type = string
+}
 variable "public_key_data" {
   type = string
 }

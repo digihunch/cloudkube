@@ -78,11 +78,14 @@ The configuration of saml2aws is stored in ~/.saml2aws file, including the profi
 ```sh
 export AWS_REGION="us-east-1"
 export AWS_PROFILE="org"
+export TF_VAR_cli_cidr_block=$(dig +short myip.opendns.com @resolver1.opendns.com)/32
 
 terraform init
 terraform plan
 terraform apply
 ```
+The value of environment variable TF_VAR_cli_cidr_block will be passed to Terraform as input variable. The Bastion host will open port 22 to any IP address on the CIDR. The dig command gets the public IP of the terminal to run terraform. It the input variable cli_cidr_block is not provided, it defaults to 0.0.0.0/0
+
 It can take 20 minutes to create the cluster, at the end, the output will read:
 ```sh
 bastion_info = "ec2-user@ec2-44-201-17-43.compute-1.amazonaws.com"
