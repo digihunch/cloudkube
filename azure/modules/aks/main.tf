@@ -68,6 +68,12 @@ resource "azurerm_kubernetes_cluster" "default" {
       enabled = false
     }
   }
+  linux_profile {
+    admin_username = var.aks_spec.node_os_user 
+    ssh_key {
+      key_data = var.aks_spec.node_public_key
+    }
+  }
 
   auto_scaler_profile {
     balance_similar_node_groups      = var.aks_spec.auto_scaler_profile.balance_similar_node_groups
@@ -102,8 +108,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload_node_pool" {
   enable_auto_scaling   = each.value.cluster_auto_scaling
   max_count             = each.value.cluster_auto_scaling ? each.value.cluster_auto_scaling_max_node_count : null
   min_count             = each.value.cluster_auto_scaling ? each.value.cluster_auto_scaling_min_node_count : null
-  #proximity_placement_group_id = azurerm_proximity_placement_group.default.id # placement group can map to only one AZ 
-  # enable_host_encryption = true # this is not supported for certain instance types
+  # proximity_placement_group_id = azurerm_proximity_placement_group.default.id # placement group can map to only one AZ 
+  # enable_host_encryption = true # feature needs to be enabled https://docs.microsoft.com/en-us/azure/aks/enable-host-encryption
   mode        = "User"
   node_labels = each.value.node_labels
   tags        = var.resource_tags

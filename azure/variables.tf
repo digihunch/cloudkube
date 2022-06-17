@@ -17,6 +17,10 @@ variable "pubkey_path" {
   type    = string
   default = "~/.ssh/id_rsa.pub"
 }
+variable "cli_cidr_block" {
+  type    = string
+  default = "0.0.0.0/0"
+}
 variable "AdminGroupGUID" {
   type = string
 }

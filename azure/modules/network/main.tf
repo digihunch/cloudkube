@@ -108,14 +108,14 @@ resource "azurerm_network_security_group" "mgmt_nsg" {
   resource_group_name = data.azurerm_resource_group.default.name
   # inline rule is sufficient for management subnet
   security_rule {
-    name                       = "Allow SSH from anywhere"
+    name                       = "Allow SSH from specified cidrs"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
+    source_address_prefixes    = [local.default_cidrs.vnet_cidr,var.ssh_client_cidr_block]
     destination_address_prefix = "*"
   }
   tags = var.resource_tags

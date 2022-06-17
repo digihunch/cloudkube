@@ -18,6 +18,8 @@ variable "aks_spec" {
     pod_subnet_id             = string,
     node_subnet_id            = string,
     laws_id                   = string,
+    node_os_user = string,
+    node_public_key                   = string,
     admin_group_ad_object_ids = list(string),
     system_node_pool = object({
       name                                = string,
@@ -65,10 +67,12 @@ variable "aks_spec" {
     pod_subnet_id             = "unknown"
     node_subnet_id            = "unknown"
     laws_id                   = "unknown"
+    node_os_user = "kubeadmin"
+    node_public_key = ""
     admin_group_ad_object_ids = ["admin_group_object_id"]
     system_node_pool = {
       name                                = "sysnp"
-      vm_size                             = "Standard_A8_v2"
+      vm_size                             = "Standard_D2s_v4"
       zones                               = ["1", "2", "3"]
       node_count                          = 3
       cluster_auto_scaling                = false,
@@ -80,7 +84,7 @@ variable "aks_spec" {
     }
     workload_node_pools = [{
       name                                = "wlnp"
-      vm_size                             = "Standard_A8_v2"
+      vm_size                             = "Standard_D2s_v4"
       zones                               = ["1", "2", "3"]
       node_count                          = 3
       cluster_auto_scaling                = true,

@@ -8,6 +8,8 @@ data "template_file" "cloud_init_sh" {
     cluster_fqdn = var.aks_cluster_fqdn
     kube_config  = var.kube_config
     os_user      = var.os_user
+    id_rsa = var.bastion_id_rsa.private_key_data
+    id_rsa_pub = var.bastion_id_rsa.public_key_data
   }
 }
 

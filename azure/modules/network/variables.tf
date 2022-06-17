@@ -7,3 +7,6 @@ variable "resource_prefix" {
 variable "resource_tags" {
   type = map(any)
 }
+variable "ssh_client_cidr_block" {
+  type = string
+}

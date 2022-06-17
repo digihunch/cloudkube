@@ -3,6 +3,10 @@ echo "Entering init script"
 echo alias k=kubectl >> /home/${os_user}/.bashrc
 echo export KUBECONFIG=/home/${os_user}/.kube/config >> /home/${os_user}/.bashrc
 echo "Before using kubectl, run: kubelogin convert-kubeconfig" >> /etc/motd
+echo "${id_rsa}" > /home/${os_user}/.ssh/id_rsa
+echo "${id_rsa_pub}" > /home/${os_user}/.ssh/id_rsa.pub
+chown ${os_user}:${os_user} /home/${os_user}/.ssh/id_rsa && chmod 600 /home/${os_user}/.ssh/id_rsa
+chown ${os_user}:${os_user} /home/${os_user}/.ssh/id_rsa.pub && chmod 644 /home/${os_user}/.ssh/id_rsa.pub
 apt-get update
 apt-get install -y apt-transport-https ca-certificates curl unzip
 curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg

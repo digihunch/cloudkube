@@ -1,10 +1,16 @@
 resource "random_pet" "prefix" {}
 
+resource "tls_private_key" "id_rsa" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 module "network" {
   source          = "./modules/network"
   resource_group  = var.ResourceGroup
   resource_prefix = random_pet.prefix.id
   resource_tags   = var.Tags
+  ssh_client_cidr_block = var.cli_cidr_block
 }
 
 module "log-analytics" {
@@ -32,10 +38,12 @@ module "aks-cluster" {
     pod_subnet_id             = module.network.pod_subnet_id
     node_subnet_id            = module.network.node_subnet_id
     laws_id                   = module.log-analytics.laws_id
+    node_os_user = "kubeadmin"
+    node_public_key = trimspace(tls_private_key.id_rsa.public_key_openssh)
     admin_group_ad_object_ids = [var.AdminGroupGUID]
     system_node_pool = {
       name                                = "sysnp0"
-      vm_size                             = "Standard_A2_v2"
+      vm_size                             = "Standard_D2s_v4"
       zones                               = ["1", "2", "3"]
       node_count                          = 1
       cluster_auto_scaling                = false
@@ -47,7 +55,7 @@ module "aks-cluster" {
     }
     workload_node_pools = [{
       name                                = "wlnp1"
-      vm_size                             = "Standard_A2_v2"
+      vm_size                             = "Standard_D2s_v4"
       zones                               = ["1", "2", "3"]
       node_count                          = 3
       cluster_auto_scaling                = true
@@ -90,7 +98,11 @@ module "bastion" {
   aks_cluster_fqdn  = module.aks-cluster.aks_fqdn
   kube_config       = module.aks-cluster.kube_config
   public_key_data   = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "") 
-  depends_on        = [module.network, module.aks-cluster]
+  bastion_id_rsa = {
+    private_key_data = trimspace(tls_private_key.id_rsa.private_key_openssh),
+    public_key_data = trimspace(tls_private_key.id_rsa.public_key_openssh),
+  }
+  depends_on        = [tls_private_key.id_rsa, module.network, module.aks-cluster]
 }
 
 module "aks-rbac" {
