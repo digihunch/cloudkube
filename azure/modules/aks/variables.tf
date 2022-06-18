@@ -7,9 +7,13 @@ variable "resource_prefix" {
 variable "resource_tags" {
   type = map(any)
 }
-#variable "aks_laws_id" {
-#  type = string
-#}
+variable "aks_byo_mi" {
+  type = object({
+    id           = string,
+    client_id    = string,
+    principal_id = string,
+  })
+}
 variable "aks_spec" {
   description = "AKS specification"
   type = object({
@@ -18,8 +22,8 @@ variable "aks_spec" {
     pod_subnet_id             = string,
     node_subnet_id            = string,
     laws_id                   = string,
-    node_os_user = string,
-    node_public_key                   = string,
+    node_os_user              = string,
+    node_public_key           = string,
     admin_group_ad_object_ids = list(string),
     system_node_pool = object({
       name                                = string,
@@ -67,8 +71,8 @@ variable "aks_spec" {
     pod_subnet_id             = "unknown"
     node_subnet_id            = "unknown"
     laws_id                   = "unknown"
-    node_os_user = "kubeadmin"
-    node_public_key = ""
+    node_os_user              = "kubeadmin"
+    node_public_key           = ""
     admin_group_ad_object_ids = ["admin_group_object_id"]
     system_node_pool = {
       name                                = "sysnp"

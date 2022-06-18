@@ -1,3 +1,3 @@
-data "azurerm_resource_group" "default" {
+data "azurerm_resource_group" "cluster_rg" {
   name = var.resource_group
 }

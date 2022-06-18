@@ -1,15 +1,15 @@
 resource "azurerm_public_ip" "pubip_bastion" {
   name                = "${var.resource_prefix}-pubip-bastion"
-  location            = data.azurerm_resource_group.default.location
-  resource_group_name = data.azurerm_resource_group.default.name
+  location            = data.azurerm_resource_group.cluster_rg.location
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
   allocation_method   = "Static"
   sku                 = "Standard"
 }
 
 resource "azurerm_network_interface" "bastion_nic" {
   name                = "${var.resource_prefix}-bastion-nic"
-  location            = data.azurerm_resource_group.default.location
-  resource_group_name = data.azurerm_resource_group.default.name
+  location            = data.azurerm_resource_group.cluster_rg.location
+  resource_group_name = data.azurerm_resource_group.cluster_rg.name
 
   ip_configuration {
     name                          = "${var.resource_prefix}-bstn-nic-cfg"
@@ -25,8 +25,8 @@ resource "azurerm_network_interface" "bastion_nic" {
 
 resource "azurerm_linux_virtual_machine" "bastion_host" {
   name                  = "${var.resource_prefix}-bastion-host"
-  location              = data.azurerm_resource_group.default.location
-  resource_group_name   = data.azurerm_resource_group.default.name
+  location              = data.azurerm_resource_group.cluster_rg.location
+  resource_group_name   = data.azurerm_resource_group.cluster_rg.name
   size                  = "Standard_DS1_v2"
   network_interface_ids = [azurerm_network_interface.bastion_nic.id]
   admin_username        = var.os_user

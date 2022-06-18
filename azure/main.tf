@@ -5,15 +5,23 @@ resource "tls_private_key" "id_rsa" {
   rsa_bits  = 4096
 }
 
-module "network" {
-  source          = "./modules/network"
+module "byo_identity" {
+  source          = "./modules/identity"
   resource_group  = var.ResourceGroup
   resource_prefix = random_pet.prefix.id
   resource_tags   = var.Tags
+}
+
+module "network" {
+  source                = "./modules/network"
+  resource_group        = var.ResourceGroup
+  resource_prefix       = random_pet.prefix.id
+  resource_tags         = var.Tags
   ssh_client_cidr_block = var.cli_cidr_block
 }
 
 module "log-analytics" {
+  count           = var.KeepDiagLogging ? 1 : 0
   source          = "./modules/log-analytics"
   resource_group  = var.ResourceGroup
   resource_prefix = random_pet.prefix.id
@@ -21,6 +29,7 @@ module "log-analytics" {
 }
 
 module "event-hub" {
+  count           = var.KeepDiagLogging ? 1 : 0
   source          = "./modules/eventhub"
   resource_group  = var.ResourceGroup
   resource_prefix = random_pet.prefix.id
@@ -32,14 +41,15 @@ module "aks-cluster" {
   resource_group  = var.ResourceGroup
   resource_prefix = random_pet.prefix.id
   resource_tags   = var.Tags
+  aks_byo_mi      = module.byo_identity.managed_id
   aks_spec = {
     cluster_name              = "aks_cluster_main"
     kubernetes_version        = "1.23.3"
     pod_subnet_id             = module.network.pod_subnet_id
     node_subnet_id            = module.network.node_subnet_id
-    laws_id                   = module.log-analytics.laws_id
-    node_os_user = "kubeadmin"
-    node_public_key = trimspace(tls_private_key.id_rsa.public_key_openssh)
+    laws_id                   = var.KeepDiagLogging ? module.log-analytics[0].laws_id : null
+    node_os_user              = "kubeadmin"
+    node_public_key           = trimspace(tls_private_key.id_rsa.public_key_openssh)
     admin_group_ad_object_ids = [var.AdminGroupGUID]
     system_node_pool = {
       name                                = "sysnp0"
@@ -50,7 +60,7 @@ module "aks-cluster" {
       cluster_auto_scaling_min_node_count = 3
       cluster_auto_scaling_max_node_count = 3
       node_labels = {
-        pool_name          = "system-np"
+        pool_name = "system-np"
       }
     }
     workload_node_pools = [{
@@ -62,7 +72,7 @@ module "aks-cluster" {
       cluster_auto_scaling_min_node_count = 3
       cluster_auto_scaling_max_node_count = 9
       node_labels = {
-        pool_name = "workload-np01"
+        pool_name          = "workload-np01"
         "px/metadata-node" = "true"
       }
     }]
@@ -86,7 +96,7 @@ module "aks-cluster" {
       skip_nodes_with_system_pods      = true,
     }
   }
-  depends_on = [module.network, module.log-analytics]
+  depends_on = [module.network, module.byo_identity, module.log-analytics]
 }
 
 module "bastion" {
@@ -97,30 +107,31 @@ module "bastion" {
   bastion_subnet_id = module.network.mgmt_subnet_id
   aks_cluster_fqdn  = module.aks-cluster.aks_fqdn
   kube_config       = module.aks-cluster.kube_config
-  public_key_data   = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "") 
+  public_key_data   = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "")
   bastion_id_rsa = {
     private_key_data = trimspace(tls_private_key.id_rsa.private_key_openssh),
-    public_key_data = trimspace(tls_private_key.id_rsa.public_key_openssh),
+    public_key_data  = trimspace(tls_private_key.id_rsa.public_key_openssh),
   }
-  depends_on        = [tls_private_key.id_rsa, module.network, module.aks-cluster]
+  depends_on = [tls_private_key.id_rsa, module.network, module.aks-cluster]
 }
 
-module "aks-rbac" {
-  source                       = "./modules/rbac"
+module "cluster-rbac" {
+  source                       = "./modules/cluster-rbac"
   resource_group               = var.ResourceGroup
   rbac_principal_object_id     = var.AdminGroupGUID
   rbac_aks_cluster_id          = module.aks-cluster.kubernetes_cluster_id
-  rbac_aks_principal_id        = module.aks-cluster.aks_identity_principal_id
+  rbac_aks_principal_id        = module.byo_identity.managed_id.principal_id
   rbac_aks_node_resource_group = module.aks-cluster.aks_node_resource_group
   depends_on                   = [module.aks-cluster]
 }
 
 module "diag-setting" {
+  count           = var.KeepDiagLogging ? 1 : 0
   source          = "./modules/diag-setting"
   resource_prefix = random_pet.prefix.id
   resource_tags   = var.Tags
   ds_laws = {
-    laws_id         = module.log-analytics.laws_id
+    laws_id         = var.KeepDiagLogging ? module.log-analytics[0].laws_id : null
     tgt_resource_id = module.aks-cluster.kubernetes_cluster_id
     logs = [{
       category          = "kube-scheduler"
@@ -142,8 +153,8 @@ module "diag-setting" {
   }
 
   ds_eventhub = {
-    eventhub_name   = module.event-hub.eventhub_name
-    eh_auth_rule_id = module.event-hub.eventhub_authn_rule_id
+    eventhub_name   = var.KeepDiagLogging ? module.event-hub[0].eventhub_name : null
+    eh_auth_rule_id = var.KeepDiagLogging ? module.event-hub[0].eventhub_authn_rule_id : null
     tgt_resource_id = module.aks-cluster.kubernetes_cluster_id
     logs = [{
       category          = "kube-scheduler"

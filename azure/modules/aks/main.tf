@@ -1,19 +1,45 @@
-resource "azurerm_user_assigned_identity" "default" {
-  name                = "${var.resource_prefix}-aks-user-identity"
-  location            = data.azurerm_resource_group.default.location
-  resource_group_name = data.azurerm_resource_group.default.name
-  tags                = var.resource_tags
-}
+#resource "azurerm_user_assigned_identity" "aks_byo_id" {
+#  name                = "${var.resource_prefix}-aks-byo-identity"
+#  location            = data.azurerm_resource_group.cluster_rg.location
+#  resource_group_name = data.azurerm_resource_group.cluster_rg.name
+#  tags                = var.resource_tags
+#}
+#
+#resource "random_uuid" "customrole" {}
+#resource "random_uuid" "roleassignment" {}
+#
+#resource "azurerm_role_definition" "role_assign_identity_to_kubelet" {
+#  role_definition_id = random_uuid.customrole.result
+#  name               = "CustomKubeletIdentityPermission"
+#  scope              = data.azurerm_resource_group.cluster_rg.id 
+#
+#  permissions {
+#    actions     = ["Microsoft.ManagedIdentity/userAssignedIdentities/assign/action"]
+#    not_actions = []
+#  }
+#
+#  assignable_scopes = [
+#    data.azurerm_resource_group.cluster_rg.id,
+#  ]
+#}
+#
+#resource "azurerm_role_assignment" "example" {
+#  name               = random_uuid.roleassignment.result
+#  scope              = data.azurerm_resource_group.cluster_rg.id 
+#  role_definition_id = azurerm_role_definition.role_assign_identity_to_kubelet.role_definition_resource_id
+#  principal_id       = azurerm_user_assigned_identity.aks_byo_id.principal_id 
+#}
+
 
 resource "azurerm_kubernetes_cluster" "default" {
-  location                            = data.azurerm_resource_group.default.location
-  resource_group_name                 = data.azurerm_resource_group.default.name
+  location                            = data.azurerm_resource_group.cluster_rg.location
+  resource_group_name                 = data.azurerm_resource_group.cluster_rg.name
   name                                = "${var.resource_prefix}-${var.aks_spec.cluster_name}"
   dns_prefix                          = "${var.resource_prefix}-k8s"
   kubernetes_version                  = var.aks_spec.kubernetes_version
   private_cluster_enabled             = true
   private_cluster_public_fqdn_enabled = true
-  node_resource_group                 = "${data.azurerm_resource_group.default.name}-${var.resource_prefix}-${var.aks_spec.cluster_name}-node"
+  node_resource_group                 = "${data.azurerm_resource_group.cluster_rg.name}-${var.resource_prefix}-${var.aks_spec.cluster_name}-node"
 
   default_node_pool {
     name                = var.aks_spec.system_node_pool.name
@@ -34,8 +60,18 @@ resource "azurerm_kubernetes_cluster" "default" {
   }
 
   identity {
-    type                      = "SystemAssigned"
-    user_assigned_identity_id = azurerm_user_assigned_identity.default.id
+    type = "UserAssigned"
+    #user_assigned_identity_id = azurerm_user_assigned_identity.aks_byo_id.id
+    user_assigned_identity_id = var.aks_byo_mi.id
+  }
+
+  kubelet_identity {
+    #client_id = azurerm_user_assigned_identity.aks_byo_id.client_id
+    #object_id = azurerm_user_assigned_identity.aks_byo_id.principal_id
+    #user_assigned_identity_id = azurerm_user_assigned_identity.aks_byo_id.id
+    client_id                 = var.aks_byo_mi.client_id
+    object_id                 = var.aks_byo_mi.principal_id
+    user_assigned_identity_id = var.aks_byo_mi.id
   }
 
   role_based_access_control {
@@ -69,7 +105,7 @@ resource "azurerm_kubernetes_cluster" "default" {
     }
   }
   linux_profile {
-    admin_username = var.aks_spec.node_os_user 
+    admin_username = var.aks_spec.node_os_user
     ssh_key {
       key_data = var.aks_spec.node_public_key
     }

@@ -24,3 +24,7 @@ variable "cli_cidr_block" {
 variable "AdminGroupGUID" {
   type = string
 }
+variable "KeepDiagLogging" {
+  type    = bool
+  default = false
+}
