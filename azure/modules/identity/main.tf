@@ -1,5 +1,4 @@
 resource "random_uuid" "customrole" {}
-#resource "random_uuid" "roleassignment" {}
 
 resource "azurerm_user_assigned_identity" "aks_byo_id" {
   name                = "${var.resource_prefix}-aks-byo-identity"
@@ -24,7 +23,6 @@ resource "azurerm_role_definition" "kubelet_id_assigner" {
 }
 
 resource "azurerm_role_assignment" "kubeletidassigner_assignment" {
-  #name               = random_uuid.roleassignment.result
   scope              = data.azurerm_resource_group.cluster_rg.id
   role_definition_id = azurerm_role_definition.kubelet_id_assigner.role_definition_resource_id
   principal_id       = azurerm_user_assigned_identity.aks_byo_id.principal_id

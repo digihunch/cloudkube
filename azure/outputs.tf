@@ -4,7 +4,6 @@ output "kubernetes_cluster_name" {
 output "bastion_login" {
   value = "${module.bastion.username}@${module.bastion.host}"
 }
-#output "kube_config" {
-#  value     = module.aks-cluster.kube_config
-#  sensitive = true
-#}
+output "byo_mi_clientid" {
+  value = module.byo_identity.managed_id.client_id
+}

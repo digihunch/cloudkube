@@ -65,5 +65,6 @@ locals {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }]
+  # Why node NSG opens 80 and 443 to all sources? check out https://www.digihunch.com/2021/12/aks-troubleshooting-lessons-learned/
   pod_sec_rules = []
 }

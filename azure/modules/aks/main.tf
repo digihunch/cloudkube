@@ -1,36 +1,3 @@
-#resource "azurerm_user_assigned_identity" "aks_byo_id" {
-#  name                = "${var.resource_prefix}-aks-byo-identity"
-#  location            = data.azurerm_resource_group.cluster_rg.location
-#  resource_group_name = data.azurerm_resource_group.cluster_rg.name
-#  tags                = var.resource_tags
-#}
-#
-#resource "random_uuid" "customrole" {}
-#resource "random_uuid" "roleassignment" {}
-#
-#resource "azurerm_role_definition" "role_assign_identity_to_kubelet" {
-#  role_definition_id = random_uuid.customrole.result
-#  name               = "CustomKubeletIdentityPermission"
-#  scope              = data.azurerm_resource_group.cluster_rg.id 
-#
-#  permissions {
-#    actions     = ["Microsoft.ManagedIdentity/userAssignedIdentities/assign/action"]
-#    not_actions = []
-#  }
-#
-#  assignable_scopes = [
-#    data.azurerm_resource_group.cluster_rg.id,
-#  ]
-#}
-#
-#resource "azurerm_role_assignment" "example" {
-#  name               = random_uuid.roleassignment.result
-#  scope              = data.azurerm_resource_group.cluster_rg.id 
-#  role_definition_id = azurerm_role_definition.role_assign_identity_to_kubelet.role_definition_resource_id
-#  principal_id       = azurerm_user_assigned_identity.aks_byo_id.principal_id 
-#}
-
-
 resource "azurerm_kubernetes_cluster" "default" {
   location                            = data.azurerm_resource_group.cluster_rg.location
   resource_group_name                 = data.azurerm_resource_group.cluster_rg.name
@@ -61,14 +28,10 @@ resource "azurerm_kubernetes_cluster" "default" {
 
   identity {
     type = "UserAssigned"
-    #user_assigned_identity_id = azurerm_user_assigned_identity.aks_byo_id.id
     user_assigned_identity_id = var.aks_byo_mi.id
   }
 
   kubelet_identity {
-    #client_id = azurerm_user_assigned_identity.aks_byo_id.client_id
-    #object_id = azurerm_user_assigned_identity.aks_byo_id.principal_id
-    #user_assigned_identity_id = azurerm_user_assigned_identity.aks_byo_id.id
     client_id                 = var.aks_byo_mi.client_id
     object_id                 = var.aks_byo_mi.principal_id
     user_assigned_identity_id = var.aks_byo_mi.id
