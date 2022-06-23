@@ -9,6 +9,10 @@ variable "Tags" {
 variable "ResourceGroup" {
   type = string
 }
+variable "ResourceLocation" {
+  type    = string
+  default = "Canada Central"
+}
 variable "pubkey_data" {
   type    = string
   default = null

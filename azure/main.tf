@@ -6,42 +6,47 @@ resource "tls_private_key" "id_rsa" {
 }
 
 module "byo_identity" {
-  source          = "./modules/identity"
-  resource_group  = var.ResourceGroup
-  resource_prefix = random_pet.prefix.id
-  resource_tags   = var.Tags
+  source            = "./modules/identity"
+  resource_group    = data.azurerm_resource_group.stack_rg.name
+  resource_location = coalesce(var.ResourceLocation, data.azurerm_resource_group.stack_rg.location)
+  resource_prefix   = random_pet.prefix.id
+  resource_tags     = var.Tags
 }
 
 module "network" {
   source                = "./modules/network"
-  resource_group        = var.ResourceGroup
+  resource_group        = data.azurerm_resource_group.stack_rg.name
+  resource_location     = coalesce(var.ResourceLocation, data.azurerm_resource_group.stack_rg.location)
   resource_prefix       = random_pet.prefix.id
   resource_tags         = var.Tags
   ssh_client_cidr_block = var.cli_cidr_block
 }
 
 module "log-analytics" {
-  count           = var.KeepDiagLogging ? 1 : 0
-  source          = "./modules/log-analytics"
-  resource_group  = var.ResourceGroup
-  resource_prefix = random_pet.prefix.id
-  resource_tags   = var.Tags
+  count             = var.KeepDiagLogging ? 1 : 0
+  source            = "./modules/log-analytics"
+  resource_group    = data.azurerm_resource_group.stack_rg.name
+  resource_location = coalesce(var.ResourceLocation, data.azurerm_resource_group.stack_rg.location)
+  resource_prefix   = random_pet.prefix.id
+  resource_tags     = var.Tags
 }
 
 module "event-hub" {
-  count           = var.KeepDiagLogging ? 1 : 0
-  source          = "./modules/eventhub"
-  resource_group  = var.ResourceGroup
-  resource_prefix = random_pet.prefix.id
-  resource_tags   = var.Tags
+  count             = var.KeepDiagLogging ? 1 : 0
+  source            = "./modules/eventhub"
+  resource_group    = data.azurerm_resource_group.stack_rg.name
+  resource_location = coalesce(var.ResourceLocation, data.azurerm_resource_group.stack_rg.location)
+  resource_prefix   = random_pet.prefix.id
+  resource_tags     = var.Tags
 }
 
 module "aks-cluster" {
-  source          = "./modules/aks"
-  resource_group  = var.ResourceGroup
-  resource_prefix = random_pet.prefix.id
-  resource_tags   = var.Tags
-  aks_byo_mi      = module.byo_identity.managed_id
+  source            = "./modules/aks"
+  resource_group    = data.azurerm_resource_group.stack_rg.name
+  resource_location = coalesce(var.ResourceLocation, data.azurerm_resource_group.stack_rg.location)
+  resource_prefix   = random_pet.prefix.id
+  resource_tags     = var.Tags
+  aks_byo_mi        = module.byo_identity.managed_id
   aks_spec = {
     cluster_name              = "aks_cluster_main"
     kubernetes_version        = "1.23.3"
@@ -52,29 +57,45 @@ module "aks-cluster" {
     node_public_key           = trimspace(tls_private_key.id_rsa.public_key_openssh)
     admin_group_ad_object_ids = [var.AdminGroupGUID]
     system_node_pool = {
-      name                                = "sysnp0"
-      vm_size                             = "Standard_D2s_v4"
+      name                                = "systemnp"
+      vm_size                             = "Standard_D2s_v3"
       zones                               = ["1", "2", "3"]
       node_count                          = 1
       cluster_auto_scaling                = false
-      cluster_auto_scaling_min_node_count = 3
-      cluster_auto_scaling_max_node_count = 3
+      cluster_auto_scaling_min_node_count = 1
+      cluster_auto_scaling_max_node_count = 1
       node_labels = {
-        pool_name = "system-np"
+        pool_name = "np-system"
       }
+      node_taints = null
     }
     workload_node_pools = [{
-      name                                = "wlnp1"
-      vm_size                             = "Standard_D2s_v4"
+      name                                = "applnp"
+      vm_size                             = "Standard_D2s_v3"
       zones                               = ["1", "2", "3"]
       node_count                          = 3
       cluster_auto_scaling                = true
       cluster_auto_scaling_min_node_count = 3
       cluster_auto_scaling_max_node_count = 9
       node_labels = {
-        pool_name          = "workload-np01"
+        pool_name          = "np-application"
         "px/metadata-node" = "true"
       }
+      node_taints = null
+      }, {
+      name                                = "storagenp"
+      vm_size                             = "Standard_D2s_v3"
+      zones                               = ["1", "2", "3"]
+      node_count                          = 3
+      cluster_auto_scaling                = false
+      cluster_auto_scaling_min_node_count = 3
+      cluster_auto_scaling_max_node_count = 3
+      node_labels = {
+        pool_name = "np-storage"
+      }
+      node_taints = [
+        "storage-node=true:NoSchedule"
+      ]
     }]
     auto_scaler_profile = {
       balance_similar_node_groups      = false,
@@ -101,7 +122,8 @@ module "aks-cluster" {
 
 module "bastion" {
   source            = "./modules/bastion"
-  resource_group    = var.ResourceGroup
+  resource_group    = data.azurerm_resource_group.stack_rg.name
+  resource_location = coalesce(var.ResourceLocation, data.azurerm_resource_group.stack_rg.location)
   resource_prefix   = random_pet.prefix.id
   resource_tags     = var.Tags
   bastion_subnet_id = module.network.mgmt_subnet_id
@@ -117,7 +139,7 @@ module "bastion" {
 
 module "cluster-rbac" {
   source                       = "./modules/cluster-rbac"
-  resource_group               = var.ResourceGroup
+  resource_group               = data.azurerm_resource_group.stack_rg.name
   rbac_principal_object_id     = var.AdminGroupGUID
   rbac_aks_cluster_id          = module.aks-cluster.kubernetes_cluster_id
   rbac_aks_principal_id        = module.byo_identity.managed_id.principal_id

@@ -1,6 +1,9 @@
 variable "resource_group" {
   type = string
 }
+variable "resource_location" {
+  type = string
+}
 variable "resource_prefix" {
   type = string
 }
@@ -33,7 +36,8 @@ variable "aks_spec" {
       cluster_auto_scaling                = bool,
       cluster_auto_scaling_min_node_count = number,
       cluster_auto_scaling_max_node_count = number,
-      node_labels                         = map(any)
+      node_labels                         = map(any),
+      node_taints                         = list(string),
     }),
     workload_node_pools = list(object({
       name                                = string,
@@ -43,7 +47,8 @@ variable "aks_spec" {
       cluster_auto_scaling                = bool,
       cluster_auto_scaling_min_node_count = number,
       cluster_auto_scaling_max_node_count = number,
-      node_labels                         = map(any)
+      node_labels                         = map(any),
+      node_taints                         = list(string),
     })),
     auto_scaler_profile = object({
       balance_similar_node_groups      = bool,
@@ -84,7 +89,8 @@ variable "aks_spec" {
       cluster_auto_scaling_max_node_count = 3,
       node_labels = {
         pool_name = "sysnp00"
-      }
+      },
+      node_taints = null,
     }
     workload_node_pools = [{
       name                                = "wlnp"
@@ -96,7 +102,8 @@ variable "aks_spec" {
       cluster_auto_scaling_max_node_count = 9,
       node_labels = {
         pool_name = "nodenp01"
-      }
+      },
+      node_taints = null,
     }]
     auto_scaler_profile = {
       balance_similar_node_groups      = false,

@@ -2,7 +2,7 @@ resource "random_uuid" "customrole" {}
 
 resource "azurerm_user_assigned_identity" "aks_byo_id" {
   name                = "${var.resource_prefix}-aks-byo-identity"
-  location            = data.azurerm_resource_group.cluster_rg.location
+  location            = var.resource_location
   resource_group_name = data.azurerm_resource_group.cluster_rg.name
   tags                = var.resource_tags
 }

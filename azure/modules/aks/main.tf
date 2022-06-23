@@ -1,5 +1,5 @@
 resource "azurerm_kubernetes_cluster" "default" {
-  location                            = data.azurerm_resource_group.cluster_rg.location
+  location                            = var.resource_location
   resource_group_name                 = data.azurerm_resource_group.cluster_rg.name
   name                                = "${var.resource_prefix}-${var.aks_spec.cluster_name}"
   dns_prefix                          = "${var.resource_prefix}-k8s"
@@ -24,10 +24,11 @@ resource "azurerm_kubernetes_cluster" "default" {
     availability_zones = var.aks_spec.system_node_pool.zones
     # https://docs.microsoft.com/en-us/azure/aks/availability-zones#verify-node-distribution-across-zones
     node_labels = var.aks_spec.system_node_pool.node_labels
+    node_taints = var.aks_spec.system_node_pool.node_taints
   }
 
   identity {
-    type = "UserAssigned"
+    type                      = "UserAssigned"
     user_assigned_identity_id = var.aks_byo_mi.id
   }
 
@@ -111,5 +112,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload_node_pool" {
   # enable_host_encryption = true # feature needs to be enabled https://docs.microsoft.com/en-us/azure/aks/enable-host-encryption
   mode        = "User"
   node_labels = each.value.node_labels
+  node_taints = each.value.node_taints
   tags        = var.resource_tags
 }

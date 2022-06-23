@@ -1,7 +1,7 @@
 resource "azurerm_virtual_network" "vnet" {
   name                = "${var.resource_prefix}-vnet"
   address_space       = [local.default_cidrs.vnet_cidr]
-  location            = data.azurerm_resource_group.cluster_rg.location
+  location            = var.resource_location
   resource_group_name = data.azurerm_resource_group.cluster_rg.name
   tags                = var.resource_tags
 }
@@ -38,7 +38,7 @@ resource "azurerm_subnet" "mgmt_subnet" {
 
 resource "azurerm_network_security_group" "lb_nsg" {
   name                = "${var.resource_prefix}-lb-nsg"
-  location            = data.azurerm_resource_group.cluster_rg.location
+  location            = var.resource_location
   resource_group_name = data.azurerm_resource_group.cluster_rg.name
 
   dynamic "security_rule" {
@@ -60,7 +60,7 @@ resource "azurerm_network_security_group" "lb_nsg" {
 
 resource "azurerm_network_security_group" "node_nsg" {
   name                = "${var.resource_prefix}-node-nsg"
-  location            = data.azurerm_resource_group.cluster_rg.location
+  location            = var.resource_location
   resource_group_name = data.azurerm_resource_group.cluster_rg.name
 
   dynamic "security_rule" {
@@ -82,7 +82,7 @@ resource "azurerm_network_security_group" "node_nsg" {
 
 resource "azurerm_network_security_group" "pod_nsg" {
   name                = "${var.resource_prefix}-pod-nsg"
-  location            = data.azurerm_resource_group.cluster_rg.location
+  location            = var.resource_location
   resource_group_name = data.azurerm_resource_group.cluster_rg.name
 
   dynamic "security_rule" {
@@ -104,7 +104,7 @@ resource "azurerm_network_security_group" "pod_nsg" {
 
 resource "azurerm_network_security_group" "mgmt_nsg" {
   name                = "${var.resource_prefix}-management-nsg"
-  location            = data.azurerm_resource_group.cluster_rg.location
+  location            = var.resource_location
   resource_group_name = data.azurerm_resource_group.cluster_rg.name
   # inline rule is sufficient for management subnet
   security_rule {
