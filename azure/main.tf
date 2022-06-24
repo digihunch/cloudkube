@@ -40,6 +40,12 @@ module "event-hub" {
   resource_tags     = var.Tags
 }
 
+# The time_sleep resource forces a 10s wait between byo_identity (including role assignment) and creation of AKS cluster. Because role assignment takes time to propagate and take effect in Azure.
+resource "time_sleep" "wait" {
+  depends_on = [module.byo_identity] 
+  create_duration = "10s"
+}
+
 module "aks-cluster" {
   source            = "./modules/aks"
   resource_group    = data.azurerm_resource_group.stack_rg.name
@@ -58,7 +64,7 @@ module "aks-cluster" {
     admin_group_ad_object_ids = [var.AdminGroupGUID]
     system_node_pool = {
       name                                = "systemnp"
-      vm_size                             = "Standard_D2s_v3"
+      vm_size                             = "Standard_DS3_v2"
       zones                               = ["1", "2", "3"]
       node_count                          = 1
       cluster_auto_scaling                = false
@@ -71,7 +77,7 @@ module "aks-cluster" {
     }
     workload_node_pools = [{
       name                                = "applnp"
-      vm_size                             = "Standard_D2s_v3"
+      vm_size                             = "Standard_DS3_v2"
       zones                               = ["1", "2", "3"]
       node_count                          = 3
       cluster_auto_scaling                = true
@@ -117,7 +123,7 @@ module "aks-cluster" {
       skip_nodes_with_system_pods      = true,
     }
   }
-  depends_on = [module.network, module.byo_identity, module.log-analytics]
+  depends_on = [module.network, module.byo_identity, module.log-analytics, time_sleep.wait]
 }
 
 module "bastion" {
