@@ -24,27 +24,6 @@ resource "aws_security_group" "bastionsecgrp" {
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-BastionSecurityGroup" })
 }
 
-resource "aws_iam_role" "ec2_iam_role" {
-  name = "${var.resource_prefix}-inst-role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-  tags               = var.resource_tags
-}
-
 resource "aws_iam_policy" "bastion_eks_policy" {
   name        = "bastion_eks_policy"
   description = "haha"
@@ -65,14 +44,14 @@ resource "aws_iam_policy" "bastion_eks_policy" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "ec2_role_policy_attachment" {
-  role       = aws_iam_role.ec2_iam_role.name
+resource "aws_iam_role_policy_attachment" "bastion_role_eks_policy_attachment" {
+  role       = "${var.bastion_role_name}" 
   policy_arn = aws_iam_policy.bastion_eks_policy.arn
 }
 
 resource "aws_iam_instance_profile" "inst_profile" {
   name = "${var.resource_prefix}-inst-profile"
-  role = aws_iam_role.ec2_iam_role.name
+  role = "${var.bastion_role_name}" 
 }
 
 resource "aws_instance" "bastion" {

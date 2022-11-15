@@ -4,6 +4,15 @@ variable "node_subnet_ids" {
 variable "vpc_id" {
   type = string
 }
+variable "cognito_oidc_issuer_url" {
+  type = string
+}
+variable "cognito_user_pool_id" {
+  type = string
+}
+variable "cognito_oidc_client_id" {
+  type = string
+}
 variable "resource_tags" {
   type = map(any)
 }

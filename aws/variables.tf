@@ -3,7 +3,7 @@ variable "Tags" {
   type        = map(any)
   default = {
     Environment = "Dev"
-    Owner       = "my@email.com"
+    Owner       = "test@example.com"
   }
 }
 variable "pubkey_data" {
@@ -18,7 +18,11 @@ variable "pubkey_path" {
   type    = string
   default = "~/.ssh/id_rsa.pub"
 }
-variable "oidc_provider_app_id" {
+variable "cluster_admin_cognito_group" {
   type    = string
-  default = "78098f11-e173-4427-8c3e-3506ad71aea9"
+  default = "cluster-admin-group"
+}
+variable "init_eks_admin_email" {
+  type = string
+  default = "test@example.com"
 }

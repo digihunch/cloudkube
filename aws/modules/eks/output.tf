@@ -17,3 +17,6 @@ output "eks_cluster_kubectl_config" {
     cluster_ca_certificate = base64decode(aws_eks_cluster.MainCluster.certificate_authority[0].data)
   }
 }
+output "eks_su_arn" {
+  value = data.aws_caller_identity.current.arn
+}

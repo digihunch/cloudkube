@@ -66,6 +66,19 @@ resource "aws_eks_cluster" "MainCluster" {
   ]
 }
 
+resource "aws_eks_identity_provider_config" "ClusterOIDCConfig" {
+  cluster_name = aws_eks_cluster.MainCluster.name
+
+  oidc {
+    identity_provider_config_name = "${var.resource_prefix}-eks-cluster-oidc-config"
+    issuer_url = var.cognito_oidc_issuer_url
+    client_id = var.cognito_oidc_client_id
+    username_claim = "email"
+    groups_claim = "cognito:groups"
+    groups_prefix = "gid:"
+  }
+}
+
 data "tls_certificate" "eks-cluster-tls-cert" {
   url = aws_eks_cluster.MainCluster.identity[0].oidc[0].issuer
 }
