@@ -1,8 +1,8 @@
 # cloud kube
 
-Cloud Kube project includes Terraform templates to create secure, scalable Kubernetes platforms with relevant logging and monitoring construct in Azure and AWS. It aims to serve as a opinionated baseline architecture for production use. 
+Cloud Kube project includes Terraform templates to create secure, scalable Kubernetes platforms with relevant logging and monitoring construct in Azure and AWS. It aims to serve as a opinionated baseline architecture for platform testers. The Kubernetes cluster is deployed in a private subnet.
 
-This project does NOT aim to be portable to any client environment because different Kubernetes deployments have significant architectural variations.
+For enterprises, platform engineers typically deploy Kubernetes cluster on top of landing zone, which covers networking and security infrastructure. In that case, this project serves as a reference implementation.
 
 ## Azure Kubernetes Service
 The template needs to run by a service principal with sufficient privilege, such as an owner of a target resource group.
@@ -69,69 +69,39 @@ Once testing is completed, to tear downt the cluster, destroy the stack:
 terraform destroy
 ```
 ## AWS Elastic Kubernetes Service
-The code is stored in [aws](https://github.com/digihunch/cloudkube/tree/main/aws) directory. The template will create a VPC with private subnet and an EKS cluster with Terraform template. A bastion host is created on one of the public subnet of the same VPC, with access to the cluster API server.
-API server authentication is based on the user AWS IAM user. It is not configured for OIDC integration with any third party identity store.
+The code is stored in [aws](https://github.com/digihunch/cloudkube/tree/main/aws) directory. The template will create a VPC with public and private subnets. A bastion host is created on one of the public subnet of the same VPC. The bastion host can access the API server of the EKS cluster, on a private endpoint. The nodes of EKS cluster are also in the private subnets.
 
-Since I use saml2aws to log into my AWS account, the following steps is based on this assumption. The bastion host also needs to have saml2aws configured for user to log in correctly, in order to connect to the cluster API server from the bastion host.
+This project configures kubectl on Bastion host to access the EKS cluster. As stated in the [documentation](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html),
+when you create an Amazon EKS cluster using an IAM entity (e.g. IAM user, role, federated user etc), that IAM entity is automatically granted `system:masters` permissions in the cluster's role-based access control (RBAC) configuration in the Amazon EKS control plane. This IAM entity does **not** appear in any visible configuration.
 
-From your environment, log on to aws using saml2aws:
-```sh
-saml2aws login
-```
-The configuration of saml2aws is stored in ~/.saml2aws file, including the profile name. Suppose the profile name is org.
+In this project, I first create an IAM role and use the role to create EKS cluster. The role is thereby the implicit master identity for the cluster. The template then creates an EC2 instace as bastion host, who can assume the IAM role and therefore act as the master of the cluster to finish the rest of the configuration from within the cluster. 
+
+This cannot be achieved by using an IAM user to create a cluster. To see what identity kubectl uses to access the cluster, turn on Authentication logging and check API access log from CloudWatch.
+
+Apart from the implicit master, we can also configure the cluster to use any OIDC identity provider. The project implements an AWS Cognito user pool as identity provider, with a hard-coded user credential. It then connects the EKS cluster to the Cognito user pool. The project also provide a script you can use to configure kubectl to use the Cognito identity to connect to the cluster. This part is a re-implementation of [this](https://aws.amazon.com/blogs/containers/introducing-oidc-identity-provider-authentication-amazon-eks/) solution in Terraform. 
+
+The bastion host opens port 22 to the public IP of the machien where you run terraform. From your machine, the Terraform template also fetches your public key (~/.ssh/id_rsa.pub file) and load it to the bastion host so the SSH authentication is automatically configured. You need to tell the template your public IP address in an environment variable. The value of environment variable TF_VAR_cli_cidr_block will be passed to Terraform as input variable. If the input variable cli_cidr_block is not provided, it defaults to 0.0.0.0/0
+
 ```sh
 export AWS_REGION="us-east-1"
-export AWS_PROFILE="org"
 export TF_VAR_cli_cidr_block=$(timeout 2 dig +short myip.opendns.com @resolver1.opendns.com || curl http://checkip.amazonaws.com)/32
 
 terraform init
 terraform plan
 terraform apply
 ```
-The value of environment variable TF_VAR_cli_cidr_block will be passed to Terraform as input variable. The Bastion host will open port 22 to any IP address on the CIDR. The dig command gets the public IP of the terminal to run terraform. It the input variable cli_cidr_block is not provided, it defaults to 0.0.0.0/0
 
-It can take 20 minutes to create the cluster, at the end, the output will read:
+It can take 30 minutes to create the cluster, at the end, the output will read:
 ```sh
-bastion_info = "ec2-user@ec2-44-201-17-43.compute-1.amazonaws.com"
-eks_endpoint = "https://0ED83B8BD5F9550243D5563A8D9E8A92.gr7.us-east-1.eks.amazonaws.com"
+bastion_info = "ec2-user@ec2-3-85-222-96.compute-1.amazonaws.com"
+cognito_user_pool = "us-east-1_LOBO8LEVv"
+eks_name = "ultimate-frog-eks-cluster"
+eks_su_arn = "arn:aws:sts::434082930953:assumed-role/ultimate-frog-eks-manager-role/aws-go-sdk-1668557828327055000"
 ```
-The end point will only be accessible from bastion host. SSH to bastion host. The public key is fetched from your environment (~/.ssh/id_rsa.pub file) so SSH should just work. Once logged onto the bastion host, the motd should read something like:
 
-To configure kubectl, edit .saml2aws with app_id, url, username, then run the following to login again on the bastion host. This will allow the IAM user to configure its kubeconfig:
-```sh
-saml2aws login
-aws eks update-kubeconfig --name clean-glider-eks-cluster --profile org --region us-east-1
-```
-The cluster name in this case is clean-glider-eks-cluster. Once cloud-init has completed, run the two commands as instructed. The second should configure kubeconfig automatically.
-```sh
-[ec2-user@ip-147-207-0-226 ~]$ saml2aws login
-Using IdP Account default to access AzureAD https://account.activedirectory.windowsazure.com
-To use saved password just hit enter.
-? Username first.last@myorg.com
-? Password *************
+You should be able to SSH to bastion host as the creation is completed. Once logged in, you will find the bootstrapping script already configure kubectl to use the implicit master identity, and prepared the script ([configure_kubectl_cognito_user.sh](https://github.com/digihunch/cloudkube/blob/main/aws/modules/bastion/custom_userdata.sh#L6) in home directory) for you to change kubectl to use Cognito user's identity. Check cloud init script to see what it does and /var/log/cloud-init-out.log for what happened during bootstrapping. 
 
-Authenticating as first.last@myorg.com ...
-Phone approval required.
-Selected role: arn:aws:iam::762497387634:role/my-org-account
-Requesting AWS credentials using SAML assertion.
-Logged in as: arn:aws:sts::762497387634:assumed-role/my-org-account/first.last@myorg.com
-
-Your new access key pair has been stored in the AWS configuration.
-Note that it will expire at 2022-05-07 04:22:38 +0000 UTC
-To use this credential, call the AWS CLI with the --profile option (e.g. aws --profile org ec2 describe-instances).
-[ec2-user@ip-147-207-0-226 ~]$ aws eks update-kubeconfig --name clean-glider-eks-cluster --profile org --region us-east-1
-Added new context arn:aws:eks:us-east-1:762497387634:cluster/clean-glider-eks-cluster to /home/ec2-user/.kube/config
-```
-With this we should be able to connect with kubectl:
-```sh
-kubectl get no
-NAME                            STATUS   ROLES    AGE     VERSION
-ip-147-207-1-27.ec2.internal    Ready    <none>   4m31s   v1.21.5-eks-9017834
-ip-147-207-2-135.ec2.internal   Ready    <none>   4m23s   v1.21.5-eks-9017834
-ip-147-207-2-222.ec2.internal   Ready    <none>   4m17s   v1.21.5-eks-9017834
-ip-147-207-3-8.ec2.internal     Ready    <none>   4m43s   v1.21.5-eks-9017834
-```
-Once testing is completed, to tear downt the cluster, destroy the stack:
+You can use either identity with kubectl to test cluster functionality. Once testing is completed, to tear downt the cluster, destroy the stack:
 ```sh
 terraform destroy
 ```
