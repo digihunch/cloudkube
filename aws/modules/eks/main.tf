@@ -57,9 +57,12 @@ resource "aws_eks_cluster" "MainCluster" {
     endpoint_private_access = true
     endpoint_public_access  = false
   }
+  version = "1.24"
+  enabled_cluster_log_types = ["api", "authenticator"]
   #  kubernetes_network_config {
   #    service_ipv4_cidr = "147.206.8.0/24"
   #  }
+  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-Cluster" })
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSClusterPolicy,
     aws_iam_role_policy_attachment.AmazonEKSVPCResourceController,

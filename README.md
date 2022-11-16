@@ -20,7 +20,7 @@ The value of environment variable TF_VAR_cli_cidr_block will be passed to Terraf
 
 The Terraform template will assign the specified Azure AD group as administrator to the newly created AKS cluster. This activity requires owner permission on the AKS cluster. Since the cluster is not created until the Terraform template is run, we need grant the Azure user owner permisson for the whole resource group.
 
-The Azure AD group that is specified as cluster administrator by UUID, must be a [security-enabled] AD group(https://docs.microsoft.com/en-us/graph/api/resources/groups-overview?view=graph-rest-1.0#group-types-in-azure-ad-and-microsoft-graph). Group type of an AD group can be viewed on Azure portal.
+The Azure AD group that is specified as cluster administrator by UUID, must be a [security-enabled](https://docs.microsoft.com/en-us/graph/api/resources/groups-overview?view=graph-rest-1.0#group-types-in-azure-ad-and-microsoft-graph) AD group. Group type of an AD group can be viewed on Azure portal.
 
 The bastion host will load up a public key fetched from your local environment (~/.ssh/id_rsa.pub). If that is not the public key you want to give out, specify the key value in TF_VAR_pubkey_data.
 Then we can login to azure and run terraform from the directory:
@@ -101,7 +101,19 @@ eks_su_arn = "arn:aws:sts::434082930953:assumed-role/ultimate-frog-eks-manager-r
 
 You should be able to SSH to bastion host as the creation is completed. Once logged in, you will find the bootstrapping script already configure kubectl to use the implicit master identity, and prepared the script ([configure_kubectl_cognito_user.sh](https://github.com/digihunch/cloudkube/blob/main/aws/modules/bastion/custom_userdata.sh#L6) in home directory) for you to change kubectl to use Cognito user's identity. Check cloud init script to see what it does and /var/log/cloud-init-out.log for what happened during bootstrapping. 
 
-You can use either identity with kubectl to test cluster functionality. Once testing is completed, to tear downt the cluster, destroy the stack:
+You can use either identity with kubectl to test cluster functionality. Going into production, to map more IAM users or roles to Kubernetes Roles, follow the [document](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html). For example, if your AWS console session does not have visibility to workloads in EKS, you will need to map the IAM user with appropriate Kubernetes Role. Suppose your console uses root user for your account, you may map it to system master by adding the following entry to `aws-auth` configmap in `kube-system` namespace:
+```yaml
+  mapUsers: |
+    - groups:
+      - system:masters
+      userarn: arn:aws:iam::<root-account-id>:root
+      username: root
+```
+In production the better way to do this is to have a viewer role and ask console user to assume that role.
+
+![Diagram](asset/eks.drawio.pngg)
+
+Once testing is completed, to tear downt the cluster, destroy the stack:
 ```sh
 terraform destroy
 ```

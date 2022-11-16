@@ -1,5 +1,4 @@
 data "aws_region" "this" {}
-data "aws_caller_identity" "current" {}
 data "aws_iam_role" "eks_manager_role" {
   name = var.eks_manager_role_name
 }
@@ -11,10 +10,17 @@ data "aws_subnet" "mgmt_subnet" {
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
-
   filter {
     name   = "name"
     values = ["amzn2-ami-hvm*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
   }
 }
 
