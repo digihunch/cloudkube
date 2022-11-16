@@ -19,9 +19,6 @@ variable "cognito_oidc_issuer_url" {
 variable "cognito_user_pool_id" {
   type = string
 }
-variable "cognito_user_pool_arn" {
-  type = string
-}
 variable "cognito_oidc_client_id" {
   type = string
 }
@@ -30,9 +27,6 @@ variable "resource_tags" {
 }
 variable "resource_prefix" {
   type = string
-}
-variable "eks_cluster_kubectl_config" {
-  type = map(any)
 }
 variable "bastion_role_name" {
   type = string

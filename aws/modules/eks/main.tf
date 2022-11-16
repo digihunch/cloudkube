@@ -77,6 +77,8 @@ resource "aws_eks_identity_provider_config" "ClusterOIDCConfig" {
     groups_claim = "cognito:groups"
     groups_prefix = "gid:"
   }
+  
+  depends_on = [aws_eks_cluster.MainCluster]
 }
 
 data "tls_certificate" "eks-cluster-tls-cert" {
@@ -87,6 +89,7 @@ resource "aws_eks_addon" "eks_main_addon" {
   addon_name        = "vpc-cni"
   resolve_conflicts = "OVERWRITE"
   tags              = merge(var.resource_tags, { "eks_addon" = "vpc-cni" })
+  depends_on = [aws_eks_cluster.MainCluster]
 }
 
 resource "aws_iam_role" "eks_node_iam_role" {
@@ -140,6 +143,7 @@ resource "aws_eks_node_group" "sys_ng" {
     aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
     aws_iam_role_policy_attachment.AmazonEKSCNIPolicyNodeRole,
     aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnlyNodeRole,
+    aws_eks_cluster.MainCluster
   ]
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-System-Node-Group-0" })
 }
@@ -161,6 +165,7 @@ resource "aws_eks_node_group" "biz_ng" {
     aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
     aws_iam_role_policy_attachment.AmazonEKSCNIPolicyNodeRole,
     aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnlyNodeRole,
+    aws_eks_cluster.MainCluster
   ]
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Business-Node-Group-1" })
 }

@@ -18,7 +18,7 @@ provider "aws" {
 provider "aws" {
   alias = "eks-manager"
   assume_role {
-    #role_arn = "${module.iam.iam_info.eks_manager_role_arn}"
+    # Do not assume the role until the duration elapsed after role creation.
     role_arn = time_sleep.iam_propagation.triggers["eks_manager_role_arn"] 
   }
 }

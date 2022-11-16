@@ -67,10 +67,8 @@ module "bastion" {
   public_key_data            = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "")
   eks_name                   = module.eks.eks_name
   eks_arn                    = module.eks.eks_arn
-  eks_cluster_kubectl_config = module.eks.eks_cluster_kubectl_config
   cognito_oidc_issuer_url = module.idp.cognito_info.issuer_url
   cognito_user_pool_id = module.idp.cognito_info.pool_id
-  cognito_user_pool_arn = module.idp.cognito_info.pool_arn
   cognito_oidc_client_id = module.idp.cognito_info.client_id
   bastion_role_name = module.iam.iam_info.bastion_role_name
   eks_manager_role_name = module.iam.iam_info.eks_manager_role_name

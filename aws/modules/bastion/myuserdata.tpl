@@ -25,7 +25,22 @@ chmod 700 get_helm.sh && ./get_helm.sh && rm get_helm.sh'
 
 runuser -l ec2-user -c 'aws eks update-kubeconfig --region ${aws_region} --name ${eks_name} --role-arn ${eks_manager_role_arn}'
 
-echo the bootstrap script already ran the following for you. Now try to connect to the k8s cluster with kubectl. >> /etc/motd
-echo aws eks update-kubeconfig --region ${aws_region} --name ${eks_name} --role-arn ${eks_manager_role_arn} >> /etc/motd
+echo aws eks update-kubeconfig --region ${aws_region} --name ${eks_name} --role-arn ${eks_manager_role_arn}
+echo Connect to cluster with kubectl >> /etc/motd
+echo To configure kubectl to use cognito user, check the script configure_cognito_user_kubectl.sh
 
+runuser -l ec2-user -c 'cat << EOF > ~/init_cognito_config.sh
+#! /bin/bash
+export aws_region=${aws_region}
+export eks_name=${eks_name}
+export eks_cluster_arn=${eks_cluster_arn}
+export eks_manager_role_arn=${eks_manager_role_arn}
+export cognito_oidc_issuer_url=${cognito_oidc_issuer_url}
+export cognito_user_pool_id=${cognito_user_pool_id}
+export cognito_oidc_client_id=${cognito_oidc_client_id}
+export cluster_admin_cognito_group=${cluster_admin_cognito_group}
+export cognito_username=test@example.com
+export cognito_password=Blah123$
+EOF
+'
 echo "Leaving script myuserdata"

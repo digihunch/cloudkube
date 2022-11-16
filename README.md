@@ -13,7 +13,7 @@ Before deployment, run:
 ```sh
 export TF_VAR_ResourceGroup=AutomationTest
 export TF_VAR_AdminGroupGUID=74d661ce-cce6-4aed-830d-5abc732a1132
-export TF_VAR_cli_cidr_block=$(dig +short myip.opendns.com @resolver1.opendns.com)/32
+export TF_VAR_cli_cidr_block=$(timeout 2 dig +short myip.opendns.com @resolver1.opendns.com || curl http://checkip.amazonaws.com)/32
 ```
 
 The value of environment variable TF_VAR_cli_cidr_block will be passed to Terraform as input variable. The Bastion host will open port 22 to any IP address on the CIDR. The dig command gets the public IP of the terminal to run terraform. It the input variable cli_cidr_block is not provided, it defaults to 0.0.0.0/0.
@@ -25,7 +25,7 @@ The Azure AD group that is specified as cluster administrator by UUID, must be a
 The bastion host will load up a public key fetched from your local environment (~/.ssh/id_rsa.pub). If that is not the public key you want to give out, specify the key value in TF_VAR_pubkey_data.
 Then we can login to azure and run terraform from the directory:
 ```sh
-export TF_VAR_cli_cidr_block=$(dig +short myip.opendns.com @resolver1.opendns.com)/32
+export TF_VAR_cli_cidr_block=$(timeout 2 dig +short myip.opendns.com @resolver1.opendns.com || curl http://checkip.amazonaws.com)/32
 # Log in to Azure, If your environment does not have browsers prompted, use --use-device-code switch
 az login
 
@@ -82,7 +82,7 @@ The configuration of saml2aws is stored in ~/.saml2aws file, including the profi
 ```sh
 export AWS_REGION="us-east-1"
 export AWS_PROFILE="org"
-export TF_VAR_cli_cidr_block=$(dig +short myip.opendns.com @resolver1.opendns.com)/32
+export TF_VAR_cli_cidr_block=$(timeout 2 dig +short myip.opendns.com @resolver1.opendns.com || curl http://checkip.amazonaws.com)/32
 
 terraform init
 terraform plan
