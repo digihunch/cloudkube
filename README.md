@@ -101,7 +101,7 @@ eks_su_arn = "arn:aws:sts::434082930953:assumed-role/ultimate-frog-eks-manager-r
 
 You should be able to SSH to bastion host as the creation is completed. Once logged in, you will find the bootstrapping script already configure kubectl to use the implicit master identity, and prepared the script ([configure_kubectl_cognito_user.sh](https://github.com/digihunch/cloudkube/blob/main/aws/modules/bastion/custom_userdata.sh#L6) in home directory) for you to change kubectl to use Cognito user's identity. Check cloud init script to see what it does and /var/log/cloud-init-out.log for what happened during bootstrapping. 
 
-You can use either identity with kubectl to test cluster functionality. Going into production, to map more IAM users or roles to Kubernetes Roles, follow the [document](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html). For example, if your AWS console session does not have visibility to workloads in EKS, you will need to map the IAM user with appropriate Kubernetes Role. Suppose your console uses root user for your account, you may map it to system master by adding the following entry to `aws-auth` configmap in `kube-system` namespace:
+You can use either identity with kubectl to test cluster functionality. Going into production, to map more IAM users or roles to Kubernetes Roles, follow the [document](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html). For example, if your AWS console session does not have visibility to workloads in [EKS resource view](https://aws.amazon.com/blogs/containers/introducing-kubernetes-resource-view-in-amazon-eks-console/), you will need to map the IAM user with appropriate Kubernetes Role. Suppose your console uses [account's root user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html), you may map it to system master by adding the following entry to `aws-auth` configmap in `kube-system` namespace:
 ```yaml
   mapUsers: |
     - groups:
@@ -109,9 +109,10 @@ You can use either identity with kubectl to test cluster functionality. Going in
       userarn: arn:aws:iam::<root-account-id>:root
       username: root
 ```
+This change takes effect immediately.
 In production the better way to do this is to have a viewer role and ask console user to assume that role.
 
-![Diagram](asset/eks.drawio.pngg)
+![Diagram](asset/eks.drawio.png)
 
 Once testing is completed, to tear downt the cluster, destroy the stack:
 ```sh
