@@ -16,6 +16,7 @@ resource "aws_security_group" "bastionsecgrp" {
     cidr_blocks = [var.ssh_client_cidr_block]
   }
   egress {
+    description = "Outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -56,12 +57,22 @@ resource "aws_iam_instance_profile" "inst_profile" {
 
 resource "aws_instance" "bastion" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = "t2.micro"
-  user_data              = data.template_cloudinit_config.bastion_cloudinit.rendered
+  instance_type          = "t3.medium"
+  user_data              = data.cloudinit_config.bastion_cloudinit.rendered
   key_name               = aws_key_pair.runner-pubkey.key_name
   vpc_security_group_ids = [aws_security_group.bastionsecgrp.id]
   subnet_id              = var.mgmt_subnet_id
   iam_instance_profile   = aws_iam_instance_profile.inst_profile.name
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens = "required"
+    http_put_response_hop_limit = 2
+  }
+  root_block_device {
+    encrypted = true
+    kms_key_id = var.custom_key_arn
+  }
+  ebs_optimized = true
   tags                   = merge(var.resource_tags, { Name = "${var.resource_prefix}-Bastion" })
 }
 

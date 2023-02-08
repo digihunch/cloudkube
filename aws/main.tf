@@ -1,5 +1,11 @@
 resource "random_pet" "prefix" {}
 
+module "kms" {
+  source = "./modules/kms"
+  resource_tags = var.Tags
+  resource_prefix = random_pet.prefix.id
+}
+
 module "idp" {
   source = "./modules/idp"
   providers = {
@@ -53,6 +59,7 @@ module "eks" {
   cognito_oidc_issuer_url = module.idp.cognito_info.issuer_url
   cognito_user_pool_id = module.idp.cognito_info.pool_id
   cognito_oidc_client_id = module.idp.cognito_info.client_id
+  custom_key_arn  = module.kms.custom_key_id
   resource_tags   = var.Tags
   resource_prefix = random_pet.prefix.id
   depends_on = [time_sleep.iam_propagation, module.iam, module.network]
@@ -74,6 +81,7 @@ module "bastion" {
   eks_manager_role_name = module.iam.iam_info.eks_manager_role_name
   ssh_client_cidr_block      = var.cli_cidr_block
   cluster_admin_cognito_group = var.cluster_admin_cognito_group
+  custom_key_arn  = module.kms.custom_key_id
   resource_tags              = var.Tags
   resource_prefix            = random_pet.prefix.id
   depends_on = [module.eks, module.network, module.iam]

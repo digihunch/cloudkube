@@ -34,12 +34,14 @@ resource "aws_security_group" "cluster_security_group" {
   description = "security group for cluster"
   vpc_id      = var.vpc_id
   ingress {
+    description = "inbound web traffic"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = [data.aws_vpc.eksVPC.cidr_block]
   }
   egress {
+    description = "outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -58,10 +60,16 @@ resource "aws_eks_cluster" "MainCluster" {
     endpoint_public_access  = false
   }
   version = "1.24"
-  enabled_cluster_log_types = ["api", "authenticator"]
+  enabled_cluster_log_types = ["api", "audit", "authenticator","controllerManager","scheduler"]
   #  kubernetes_network_config {
   #    service_ipv4_cidr = "147.206.8.0/24"
   #  }
+  encryption_config {
+    provider {
+      key_arn = var.custom_key_arn
+    }
+    resources = ["secrets"]
+  }
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-Cluster" })
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSClusterPolicy,

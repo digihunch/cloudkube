@@ -78,7 +78,8 @@ resource "aws_iam_policy" "eks_manager_policy" {
       "Action": [
         "eks:*",
         "iam:*",
-        "ec2:*"
+        "ec2:*",
+        "kms:*"
       ],
       "Effect": "Allow",
       "Resource": "*"

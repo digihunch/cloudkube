@@ -37,3 +37,6 @@ variable "eks_manager_role_name" {
 variable "cluster_admin_cognito_group" {
   type = string
 }
+variable "custom_key_arn" {
+  type = string
+}

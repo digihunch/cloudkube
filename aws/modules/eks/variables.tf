@@ -13,6 +13,9 @@ variable "cognito_user_pool_id" {
 variable "cognito_oidc_client_id" {
   type = string
 }
+variable "custom_key_arn" {
+  type = string
+}
 variable "resource_tags" {
   type = map(any)
 }
