@@ -62,7 +62,7 @@ module "eks" {
   custom_key_arn  = module.kms.custom_key_id
   resource_tags   = var.Tags
   resource_prefix = random_pet.prefix.id
-  depends_on = [time_sleep.iam_propagation, module.iam, module.network]
+  depends_on = [time_sleep.iam_propagation, module.iam, module.network, module.kms]
 }
 
 module "bastion" {
@@ -84,5 +84,5 @@ module "bastion" {
   custom_key_arn  = module.kms.custom_key_id
   resource_tags              = var.Tags
   resource_prefix            = random_pet.prefix.id
-  depends_on = [module.eks, module.network, module.iam]
+  depends_on = [module.eks, module.network, module.iam, module.kms]
 }
