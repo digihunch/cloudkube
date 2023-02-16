@@ -1,5 +1,5 @@
 resource "aws_iam_role" "bastion_instance_role" {
-  name = "${var.resource_prefix}-inst-role"
+  name = "${var.resource_prefix}-bastion-inst-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -76,6 +76,7 @@ resource "aws_iam_policy" "eks_manager_policy" {
   "Statement": [
     {
       "Action": [
+        "cloudformation:*",
         "eks:*",
         "iam:*",
         "ec2:*",

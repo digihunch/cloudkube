@@ -1,0 +1,84 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualGateway
+metadata:
+  name: ingress-gw
+  namespace: demo
+spec:
+  namespaceSelector:
+    matchLabels:
+      gateway: ingress-gw
+  podSelector:
+    matchLabels:
+      app: ingress-gw
+  listeners:
+    - portMapping:
+        port: 8088
+        protocol: http
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: GatewayRoute
+metadata:
+  name: gateway-route-headers
+  namespace: demo
+spec:
+  httpRoute:
+    match:
+      prefix: "/headers"
+    action:
+      target:
+        virtualService:
+          virtualServiceRef:
+            name: color-headers
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: GatewayRoute
+metadata:
+  name: gateway-route-paths
+  namespace: demo
+spec:
+  httpRoute:
+    match:
+      prefix: "/paths"
+    action:
+      target:
+        virtualService:
+          virtualServiceRef:
+            name: color-paths
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-gw
+  namespace: demo
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8088
+      name: http
+  selector:
+    app: ingress-gw
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-gw
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingress-gw
+  template:
+    metadata:
+      labels:
+        app: ingress-gw
+    spec:
+      serviceAccountName: ingress-sa
+      containers:
+        - name: envoy
+          image: 840364872350.dkr.ecr.us-west-2.amazonaws.com/aws-appmesh-envoy:v1.24.0.0-prod
+          ports:
+            - containerPort: 8088

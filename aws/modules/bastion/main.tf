@@ -27,7 +27,7 @@ resource "aws_security_group" "bastionsecgrp" {
 
 resource "aws_iam_policy" "bastion_eks_policy" {
   name        = "bastion_eks_policy"
-  description = "haha"
+  description = "bastion to allow awscli administrative activities from instance role."
   policy      = <<EOF
 {
   "Version": "2012-10-17",
@@ -35,10 +35,19 @@ resource "aws_iam_policy" "bastion_eks_policy" {
     {
       "Action": [
         "eks:Describe*",
-        "eks:List*"
+        "eks:List*",
+        "appmesh:*"
       ],
       "Effect": "Allow",
       "Resource": "${var.eks_arn}"
+    },
+    {
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:ListPolicies"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
     }
   ]
 }

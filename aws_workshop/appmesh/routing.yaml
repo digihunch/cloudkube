@@ -1,0 +1,306 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: white
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels:
+      app: color
+      version: white
+  listeners:
+    - portMapping:
+        port: 8080
+        protocol: http
+      healthCheck:
+        protocol: http
+        path: '/ping'
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        timeoutMillis: 2000
+        intervalMillis: 5000
+  serviceDiscovery:
+    dns:
+      hostname: color-white.demo.svc.cluster.local
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: blue
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels:
+      app: color
+      version: blue
+  listeners:
+    - portMapping:
+        port: 8080
+        protocol: http
+      healthCheck:
+        protocol: http
+        path: '/ping'
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        timeoutMillis: 2000
+        intervalMillis: 5000
+  serviceDiscovery:
+    dns:
+      hostname: color-blue.demo.svc.cluster.local
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: red
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels:
+      app: color
+      version: red
+  listeners:
+    - portMapping:
+        port: 8080
+        protocol: http
+      healthCheck:
+        protocol: http
+        path: '/ping'
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        timeoutMillis: 2000
+        intervalMillis: 5000
+  serviceDiscovery:
+    dns:
+      hostname: color-red.demo.svc.cluster.local
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: yellow
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels:
+      app: color
+      version: yellow
+  listeners:
+    - portMapping:
+        port: 8080
+        protocol: http
+      healthCheck:
+        protocol: http
+        path: '/ping'
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        timeoutMillis: 2000
+        intervalMillis: 5000
+  serviceDiscovery:
+    dns:
+      hostname: color-yellow.demo.svc.cluster.local
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: green
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels:
+      app: color
+      version: green
+  listeners:
+    - portMapping:
+        port: 8080
+        protocol: http
+      healthCheck:
+        protocol: http
+        path: '/ping'
+        healthyThreshold: 2
+        unhealthyThreshold: 2
+        timeoutMillis: 2000
+        intervalMillis: 5000
+  serviceDiscovery:
+    dns:
+      hostname: color-green.demo.svc.cluster.local
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: color-headers
+  namespace: demo
+spec:
+  awsName: color-headers.demo.svc.cluster.local
+  provider:
+    virtualRouter:
+      virtualRouterRef:
+        name: color-headers
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: color-paths
+  namespace: demo
+spec:
+  awsName: color-paths.demo.svc.cluster.local
+  provider:
+    virtualRouter:
+      virtualRouterRef:
+        name: color-paths
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualRouter
+metadata:
+  namespace: demo
+  name: color-headers
+spec:
+  listeners:
+    - portMapping:
+        port: 8080
+        protocol: http
+  routes:
+    - name: color-route-blue
+      priority: 10
+      httpRoute:
+        match:
+          prefix: /
+          headers:
+            - name: color_header
+              match:
+                exact: blue
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: blue
+              weight: 1
+    - name: color-route-green
+      priority: 20
+      httpRoute:
+        match:
+          prefix: /
+          headers:
+            - name: color_header
+              match:
+                regex: ".*green.*"
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: green
+              weight: 1
+    - name: color-route-red
+      priority: 30
+      httpRoute:
+        match:
+          prefix: /
+          headers:
+            - name: color_header
+              match:
+                prefix: red
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: red
+              weight: 1
+    - name: color-route-yellow
+      priority: 40
+      httpRoute:
+        match:
+          prefix: /
+          headers:
+            - name: color_header
+              #no match means if header present
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: yellow
+              weight: 1
+    - name: color-route-white
+      httpRoute:
+        match:
+          #default match with no priority
+          prefix: /
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: white
+              weight: 1
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualRouter
+metadata:
+  namespace: demo
+  name: color-paths
+spec:
+  listeners:
+    - portMapping:
+        port: 8080
+        protocol: http
+  routes:
+    - name: color-route-blue
+      priority: 10
+      httpRoute:
+        match:
+          prefix: /blue
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: blue
+              weight: 1
+    - name: color-route-green
+      priority: 20
+      httpRoute:
+        match:
+          prefix: /green
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: green
+              weight: 1
+    - name: color-route-red
+      priority: 30
+      httpRoute:
+        match:
+          prefix: /red
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: red
+              weight: 1
+    - name: color-route-yellow
+      priority: 40
+      httpRoute:
+        match:
+          prefix: /yellow
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: yellow
+              weight: 1
+    - name: color-route-white
+      httpRoute:
+        match:
+          prefix: /
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: white
+              weight: 1

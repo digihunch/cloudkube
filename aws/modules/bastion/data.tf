@@ -1,4 +1,6 @@
 data "aws_region" "this" {}
+#data "aws_caller_identity" "current" {}
+
 data "aws_iam_role" "eks_manager_role" {
   name = var.eks_manager_role_name
 }

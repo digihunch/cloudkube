@@ -1,0 +1,219 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-green
+  namespace: demo
+spec:
+  ports:
+    - port: 8080
+      name: http
+  selector:
+    app: color
+    version: green
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: green
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: color
+      version: green
+  template:
+    metadata:
+      labels:
+        app: color
+        version: green
+    spec:
+      serviceAccountName: colorapp-sa
+      containers:
+        - name: app
+          image: digihunch/colorapp:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: "COLOR"
+              value: "green"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-blue
+  namespace: demo
+spec:
+  ports:
+    - port: 8080
+      name: http
+  selector:
+    app: color
+    version: blue
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: color
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: color
+        version: blue
+    spec:
+      serviceAccountName: colorapp-sa
+      containers:
+        - name: app
+          image: digihunch/colorapp:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: "COLOR"
+              value: "blue"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-red
+  namespace: demo
+spec:
+  ports:
+    - port: 8080
+      name: http
+  selector:
+    app: color
+    version: red
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: red
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: color
+      version: red
+  template:
+    metadata:
+      labels:
+        app: color
+        version: red
+    spec:
+      serviceAccountName: colorapp-sa
+      containers:
+        - name: app
+          image: digihunch/colorapp:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: "COLOR"
+              value: "red"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-yellow
+  namespace: demo
+spec:
+  ports:
+    - port: 8080
+      name: http
+  selector:
+    app: color
+    version: yellow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yellow
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: color
+      version: yellow
+  template:
+    metadata:
+      labels:
+        app: color
+        version: yellow
+    spec:
+      serviceAccountName: colorapp-sa
+      containers:
+        - name: app
+          image: digihunch/colorapp:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: "COLOR"
+              value: "yellow"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-white
+  namespace: demo
+spec:
+  ports:
+    - port: 8080
+      name: http
+  selector:
+    app: color
+    version: white
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: white
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: color
+      version: white
+  template:
+    metadata:
+      labels:
+        app: color
+        version: white
+    spec:
+      serviceAccountName: colorapp-sa
+      containers:
+        - name: app
+          image: digihunch/colorapp:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: "COLOR"
+              value: "white"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-headers
+  namespace: demo
+spec:
+  ports:
+    - port: 8080
+      name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-paths
+  namespace: demo
+spec:
+  ports:
+    - port: 8080
+      name: http
