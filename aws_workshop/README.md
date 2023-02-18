@@ -8,7 +8,7 @@ Use the terraform template in cloudkube/aws to provision an EKS cluster and supp
 bastion_info = "ec2-user@ec2-35-166-73-32.us-west-2.compute.amazonaws.com"
 cognito_user_pool = "us-west-2_hroD6VBSi"
 eks_name = "decent-fly-eks-cluster"
-eks_su_arn = "arn:aws:sts::289642802629:assumed-role/decent-fly-eks-manager-role/aws-go-sdk-1676524906050727000"
+eks_su_arn = "arn:aws:sts::9876543210:assumed-role/decent-fly-eks-manager-role/aws-go-sdk-1676524906050727000"
 ```
 The template grabs SSH key from running environment and you should be able to SSH to Bastion host.
 
@@ -113,34 +113,50 @@ In the steps above, we first created our own policies with `aws cli`. We then us
 
 ## Deploy Ingress Gateway and Workload
 
-Now we can deploy the Ingress Gateway, by applying the `ingress.yaml` file. We need to ensure that the Deployment has the Pod in `Ready` status.
+Now we can deploy the Ingress Gateway, by applying the `ingress.yaml` file. We need to ensure that the Deployment has the Pod in `Ready` status. The Ingress is driven by an Envoy Pod, whose container image is specific to AWS region and you can find the correct image URL [here](https://docs.aws.amazon.com/app-mesh/latest/userguide/envoy.html). The manifiest includes the 
 ```sh
 kubectl apply -f ingress.yaml
 kubectl -n demo get deploy
 kubectl -n demo get svc
 export GW_ENDPOINT=$(kubectl -n demo get svc ingress-gw --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 ```
-When we check the Service we can get the Ingress IP and keep it in `GW_ENDPOINT` variable. We can then deploy routing object and the actual workload:
+The manifest above includes a Service object of `LoadBalancer` type. It creates an underlying network load balancer connected to the private subnets. We can keep its DNS name in `GW_ENDPOINT` variable for later, but bear in mind that the load balancer may still take some time to warm up. You can check the status of the load balancer on AWS console or CLI. The manifest also consists of Virtual Gateway and Gateway Route resources. If the ingress pod fails to start, check its stdout.
+
+We can then deploy AppMesh's workload routing resources and the actual workload (colorapp) resources:
 ```sh
 kubectl apply -f routing.yaml
 kubectl apply -f workload.yaml
+kubectl -n demo get po
+NAME                          READY   STATUS    RESTARTS   AGE
+blue-85999d99f7-zntq8         2/2     Running   0          4h6m
+green-7b56c484c5-zfdpd        2/2     Running   0          4h6m
+ingress-gw-6748bd85b6-rhsgz   1/1     Running   0          96m
+red-7bb745d95f-p6cth          2/2     Running   0          4h6m
+white-6f8d5d49bc-7rgnx        2/2     Running   0          4h6m
+yellow-5d4c557b89-4kgdr       2/2     Running   0          4h6m
+```
+Ensure that all Pods in the demo namespace are up and running. Note that the workload Pods have sidecars so they have two containers. If one of them fails to start, check its stdout. For the AppMesh routing resources, you can also see them in AWS console or CLI.
+
+It may take a minute for the settings to apply to the underlying Network Load Balancer. We can verify deployment by sending different paths and headers:
+```sh
+curl $GW_ENDPOINT/paths/red ; echo;
+curl -H "color_header: blue" $GW_ENDPOINT/headers ; echo;
 ```
 
-Verify result by sending different paths and headers:
+If the command does not print expected result, there are a few things to check. The Load Balancer must be internal and has registered targets (nodes). You can also spin up a troubleshooting Pods and perform `curl` and `nc` from within the mesh:
 ```sh
-curl ${GW_ENDPOINT}/paths/red ; echo;
-curl -H "color_header: blue" ${GW_ENDPOINT}/headers ; echo;
+kubectl -n demo run tmp-shell --rm -i --tty --image nicolaka/netshoot --annotations="appmesh.k8s.aws/sidecarInjectorWebhook=disabled"
 ```
-In AWS console, you should be able to see routing resources under AppMesh.
+We need the line of annotation to tell the Mesh to not inject Envoy sidecar. From the throw-away tester Pod, we can test connectivity to the internal IP of pods, and ingress.
 
 
 ## Configure storage class for stateful workload
 
-To configure storage class, we first need to install CSI drivers using Helm. The driver deployment uses the IRSA pattern again to communicate with AWS backend. Below are the steps:
+To configure storage class, we first need to install CSI driver using Helm. The driver deployment uses the IRSA pattern again to communicate with AWS backend. Below are the steps:
 
 ```sh
-export EBS_CSI_POLICY_NAME="Amazon_EBS_CSI_Driver"
-curl -sSL -o ebs-csi-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-ebs-csi-driver/master/docs/example-iam-policy.json
+export EBS_CSI_POLICY_NAME="manage-aws-ebs-sa"
+# curl -sSL -o ebs-csi-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-ebs-csi-driver/master/docs/example-iam-policy.json
 aws iam create-policy \
   --region ${AWS_REGION} \
   --policy-name ${EBS_CSI_POLICY_NAME} \
@@ -173,50 +189,52 @@ helm upgrade --install aws-ebs-csi-driver \
   --set serviceAccount.controller.name=ebs-csi-controller-irsa \
   aws-ebs-csi-driver/aws-ebs-csi-driver
 ```
-We can verify the installation of csi-controller. If successufl, we can then configure a storage class.
+We can verify the installation of csi-controller. If successufl, we can then configure a storage class, and a PVC.
 ```sh
 kubectl -n kube-system rollout status deployment ebs-csi-controller
 kubectl apply -f prom-sc.yaml
+kubectl apply -f pvc.yaml
 ```
-
+Now, we have a PVC in the appmesh-system namespace, using our own storage class, which has CSI provisioner.
 
 
 ## Observability
-
-
-Envoy can emit its metrics via its stats endpoint by passing in the parameter /stats?format=prometheus.
+First, we install Prometheus with Helm, and specify the PVC we just created.
 ```sh
 helm upgrade -i appmesh-prometheus eks/appmesh-prometheus \
 --namespace appmesh-system \
 --set retention=12h \
 --set persistentVolumeClaim.claimName=prometheus
 ```
+If the Prometheus pod is available in appmesh-system namespace, we can visit the console for Prometheus. We can configure that on the Ingress, or as a shortcut, use port-forwarding:
 
 ```sh
 kubectl -n appmesh-system port-forward svc/appmesh-prometheus 9090:9090
 ```
 
+The bastion host does not have a browswer, we can further forward the port to SSH client machine:
 ```sh
 ssh ec2-user@ec2-35-166-73-32.us-west-2.compute.amazonaws.com -L 9090:localhost:9090
 ```
+
+From the client machine, browse to localhost:9090, In the query box, select a metric, such as `envoy_http_downstream_rq_total` and hit Execute. 
 
 ## Clean up
 1. Uninstall stateful workload (Prometheus) and delete PVs
 ```sh
 helm -n appmesh-system uninstall appmesh-prometheus
-k -n appmesh-system get pv
+kubectl delete -f pvc.yaml
+kubectl -n appmesh-system get pv
+kubectl -n appmesh-system delete pv pvc-8c241387-dc1c-4cc5-a44f-e38a1eb95571
+kubectl delete -f prom-sc.yaml
 ```
+The PV may take a couple minutes to delete.
+
 2. Delete Workload, Routing, Ingress objects. The Service object with LoadBalancer type is deleted. You should not see a LoadBalancer in AWS Console. 
 ```sh
-k delete -f prom-sc.yaml
-k delete -f workload.yaml
-k delete -f routing.yaml
-k delete -f ingress.yaml
+k delete -f workload.yaml -f routing.yaml 
+k delete -f ingress.yaml -f mesh.yaml
 ```
 3. In AWS Console, go to CloudFormation and delete the stacks created by `eksctl`
-4. In AWS Console, delete the policies
+4. In AWS Console, delete the policies created above
 5. Destroy the EKS cluster using Terraform.
-
-
-
-

@@ -14,6 +14,10 @@ spec:
     - portMapping:
         port: 8088
         protocol: http
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
 ---
 apiVersion: appmesh.k8s.aws/v1beta2
 kind: GatewayRoute
@@ -52,6 +56,8 @@ metadata:
   namespace: demo
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
 spec:
   type: LoadBalancer
   ports:
@@ -79,6 +85,7 @@ spec:
       serviceAccountName: ingress-sa
       containers:
         - name: envoy
+          # image per region: https://docs.aws.amazon.com/app-mesh/latest/userguide/envoy.html
           image: 840364872350.dkr.ecr.us-west-2.amazonaws.com/aws-appmesh-envoy:v1.24.0.0-prod
           ports:
             - containerPort: 8088
