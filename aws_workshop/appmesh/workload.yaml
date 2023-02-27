@@ -31,7 +31,7 @@ spec:
       serviceAccountName: colorapp-sa
       containers:
         - name: app
-          image: digihunch/colorapp:latest
+          image: digihunch/colorapp:v0.2
           ports:
             - containerPort: 8080
           env:
@@ -71,7 +71,7 @@ spec:
       serviceAccountName: colorapp-sa
       containers:
         - name: app
-          image: digihunch/colorapp:latest
+          image: digihunch/colorapp:v0.2
           ports:
             - containerPort: 8080
           env:
@@ -111,7 +111,7 @@ spec:
       serviceAccountName: colorapp-sa
       containers:
         - name: app
-          image: digihunch/colorapp:latest
+          image: digihunch/colorapp:v0.2
           ports:
             - containerPort: 8080
           env:
@@ -151,7 +151,7 @@ spec:
       serviceAccountName: colorapp-sa
       containers:
         - name: app
-          image: digihunch/colorapp:latest
+          image: digihunch/colorapp:v0.2
           ports:
             - containerPort: 8080
           env:
@@ -191,7 +191,7 @@ spec:
       serviceAccountName: colorapp-sa
       containers:
         - name: app
-          image: digihunch/colorapp:latest
+          image: digihunch/colorapp:v0.2
           ports:
             - containerPort: 8080
           env:

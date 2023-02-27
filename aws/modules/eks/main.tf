@@ -132,6 +132,11 @@ resource "aws_iam_role_policy_attachment" "AmazonEKSCNIPolicyNodeRole" {
   role       = aws_iam_role.eks_node_iam_role.name
 }
 
+resource "aws_iam_role_policy_attachment" "AmazonEKSSSMPolicyNodeRole" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  role       = aws_iam_role.eks_node_iam_role.name
+}
+
 resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnlyNodeRole" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   role       = aws_iam_role.eks_node_iam_role.name
@@ -141,6 +146,8 @@ resource "aws_eks_node_group" "sys_ng" {
   cluster_name    = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-sys-ng0"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
+  instance_types = ["t3.medium"]
+  ami_type = "AL2_x86_64"
   subnet_ids      = var.node_subnet_ids
   scaling_config {
     desired_size = 1
@@ -159,10 +166,12 @@ resource "aws_eks_node_group" "sys_ng" {
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-System-Node-Group-0" })
 }
 
-resource "aws_eks_node_group" "biz_ng" {
+resource "aws_eks_node_group" "biz_ng_1" {
   cluster_name    = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-biz-ng1"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
+  instance_types = ["t3.medium"]
+  ami_type = "AL2_x86_64"
   subnet_ids      = var.node_subnet_ids
   scaling_config {
     desired_size = 3
@@ -179,4 +188,28 @@ resource "aws_eks_node_group" "biz_ng" {
     aws_eks_cluster.MainCluster
   ]
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Business-Node-Group-1" })
+}
+
+resource "aws_eks_node_group" "biz_ng_2" {
+  cluster_name    = aws_eks_cluster.MainCluster.name
+  node_group_name = "${var.resource_prefix}-eks-biz-ng2"
+  node_role_arn   = aws_iam_role.eks_node_iam_role.arn
+  instance_types = ["m7g.large"]
+  ami_type = "AL2_ARM_64"
+  subnet_ids      = var.node_subnet_ids
+  scaling_config {
+    desired_size = 3
+    max_size     = 9
+    min_size     = 3
+  }
+  update_config {
+    max_unavailable = 1
+  }
+  depends_on = [
+    aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
+    aws_iam_role_policy_attachment.AmazonEKSCNIPolicyNodeRole,
+    aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnlyNodeRole,
+    aws_eks_cluster.MainCluster
+  ]
+  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Business-Node-Group-2" })
 }
