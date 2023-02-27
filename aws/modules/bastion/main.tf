@@ -55,13 +55,13 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "bastion_role_eks_policy_attachment" {
-  role       = "${var.bastion_role_name}" 
+  role       = var.bastion_role_name
   policy_arn = aws_iam_policy.bastion_eks_policy.arn
 }
 
 resource "aws_iam_instance_profile" "inst_profile" {
   name = "${var.resource_prefix}-inst-profile"
-  role = "${var.bastion_role_name}" 
+  role = var.bastion_role_name
 }
 
 resource "aws_instance" "bastion" {
@@ -73,15 +73,15 @@ resource "aws_instance" "bastion" {
   subnet_id              = var.mgmt_subnet_id
   iam_instance_profile   = aws_iam_instance_profile.inst_profile.name
   metadata_options {
-    http_endpoint = "enabled"
-    http_tokens = "required"
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
     http_put_response_hop_limit = 2
   }
   root_block_device {
-    encrypted = true
+    encrypted  = true
     kms_key_id = var.custom_key_arn
   }
   ebs_optimized = true
-  tags                   = merge(var.resource_tags, { Name = "${var.resource_prefix}-Bastion" })
+  tags          = merge(var.resource_tags, { Name = "${var.resource_prefix}-Bastion" })
 }
 

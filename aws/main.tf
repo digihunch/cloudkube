@@ -1,8 +1,8 @@
 resource "random_pet" "prefix" {}
 
 module "kms" {
-  source = "./modules/kms"
-  resource_tags = var.Tags
+  source          = "./modules/kms"
+  resource_tags   = var.Tags
   resource_prefix = random_pet.prefix.id
 }
 
@@ -11,10 +11,10 @@ module "idp" {
   providers = {
     aws = aws.power-user
   }
-  init_admin_email = var.init_eks_admin_email
+  init_admin_email            = var.init_eks_admin_email
   cluster_admin_cognito_group = var.cluster_admin_cognito_group
-  resource_tags = var.Tags
-  resource_prefix = random_pet.prefix.id
+  resource_tags               = var.Tags
+  resource_prefix             = random_pet.prefix.id
 }
 
 module "iam" {
@@ -22,10 +22,10 @@ module "iam" {
   providers = {
     aws = aws.power-user
   }
-  cognito_up_arn = module.idp.cognito_info.pool_arn
-  resource_tags = var.Tags
+  cognito_up_arn  = module.idp.cognito_info.pool_arn
+  resource_tags   = var.Tags
   resource_prefix = random_pet.prefix.id
-  depends_on = [module.idp]
+  depends_on      = [module.idp]
 }
 
 resource "time_sleep" "iam_propagation" {
@@ -49,7 +49,7 @@ module "network" {
 }
 
 module "eks" {
-  source          = "./modules/eks"
+  source = "./modules/eks"
   providers = {
     aws = aws.eks-manager
   }
@@ -57,32 +57,32 @@ module "eks" {
   vpc_id          = module.network.vpc_info.vpc_id
   #  pod_subnet_id =  module.network.vpc_info.pod_subnet_id 
   cognito_oidc_issuer_url = module.idp.cognito_info.issuer_url
-  cognito_user_pool_id = module.idp.cognito_info.pool_id
-  cognito_oidc_client_id = module.idp.cognito_info.client_id
-  custom_key_arn  = module.kms.custom_key_id
-  resource_tags   = var.Tags
-  resource_prefix = random_pet.prefix.id
-  depends_on = [time_sleep.iam_propagation, module.iam, module.network, module.kms]
+  cognito_user_pool_id    = module.idp.cognito_info.pool_id
+  cognito_oidc_client_id  = module.idp.cognito_info.client_id
+  custom_key_arn          = module.kms.custom_key_id
+  resource_tags           = var.Tags
+  resource_prefix         = random_pet.prefix.id
+  depends_on              = [time_sleep.iam_propagation, module.iam, module.network, module.kms]
 }
 
 module "bastion" {
-  source                     = "./modules/bastion"
+  source = "./modules/bastion"
   providers = {
     aws = aws.power-user
   }
-  mgmt_subnet_id             = module.network.vpc_info.mgmt_subnet_id
-  public_key_data            = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "")
-  eks_name                   = module.eks.eks_name
-  eks_arn                    = module.eks.eks_arn
-  cognito_oidc_issuer_url = module.idp.cognito_info.issuer_url
-  cognito_user_pool_id = module.idp.cognito_info.pool_id
-  cognito_oidc_client_id = module.idp.cognito_info.client_id
-  bastion_role_name = module.iam.iam_info.bastion_role_name
-  eks_manager_role_name = module.iam.iam_info.eks_manager_role_name
-  ssh_client_cidr_block      = var.cli_cidr_block
+  mgmt_subnet_id              = module.network.vpc_info.mgmt_subnet_id
+  public_key_data             = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "")
+  eks_name                    = module.eks.eks_name
+  eks_arn                     = module.eks.eks_arn
+  cognito_oidc_issuer_url     = module.idp.cognito_info.issuer_url
+  cognito_user_pool_id        = module.idp.cognito_info.pool_id
+  cognito_oidc_client_id      = module.idp.cognito_info.client_id
+  bastion_role_name           = module.iam.iam_info.bastion_role_name
+  eks_manager_role_name       = module.iam.iam_info.eks_manager_role_name
+  ssh_client_cidr_block       = var.cli_cidr_block
   cluster_admin_cognito_group = var.cluster_admin_cognito_group
-  custom_key_arn  = module.kms.custom_key_id
-  resource_tags              = var.Tags
-  resource_prefix            = random_pet.prefix.id
-  depends_on = [module.eks, module.network, module.iam, module.kms]
+  custom_key_arn              = module.kms.custom_key_id
+  resource_tags               = var.Tags
+  resource_prefix             = random_pet.prefix.id
+  depends_on                  = [module.eks, module.network, module.iam, module.kms]
 }

@@ -4,7 +4,7 @@ resource "aws_iam_role" "bastion_instance_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "Statement1"
+        Sid    = "Statement1"
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
@@ -17,9 +17,9 @@ resource "aws_iam_role" "bastion_instance_role" {
 }
 
 resource "aws_iam_policy" "bastion_cognito_policy" {
-  name = "bastion_cognito_policy"
+  name        = "bastion_cognito_policy"
   description = "Policy to allow bastion role to log on with cognito users."
-  policy = <<EOF
+  policy      = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -36,7 +36,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "bastion_role_policy_attachment" {
-  role = aws_iam_role.bastion_instance_role.name
+  role       = aws_iam_role.bastion_instance_role.name
   policy_arn = aws_iam_policy.bastion_cognito_policy.arn
 }
 
@@ -47,7 +47,7 @@ resource "aws_iam_role" "eks_manager_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "Statement1"
+        Sid    = "Statement1"
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
@@ -55,11 +55,11 @@ resource "aws_iam_role" "eks_manager_role" {
         }
       },
       {
-        Sid = "Statement2"
+        Sid    = "Statement2"
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          AWS = ["${data.aws_caller_identity.current.arn}","${aws_iam_role.bastion_instance_role.arn}"]
+          AWS = ["${data.aws_caller_identity.current.arn}", "${aws_iam_role.bastion_instance_role.arn}"]
         }
       },
     ]
@@ -68,9 +68,9 @@ resource "aws_iam_role" "eks_manager_role" {
 }
 
 resource "aws_iam_policy" "eks_manager_policy" {
-  name = "eks_manager_policy"
+  name        = "eks_manager_policy"
   description = "Policy to allow eks manager role to create EKS cluster."
-  policy = <<EOF
+  policy      = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -91,6 +91,6 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "eks_manager_role_policy_attachment" {
-  role = aws_iam_role.eks_manager_role.name
+  role       = aws_iam_role.eks_manager_role.name
   policy_arn = aws_iam_policy.eks_manager_policy.arn
 }

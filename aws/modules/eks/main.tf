@@ -1,3 +1,12 @@
+locals {
+  inst_type_sys_ng   = "t3.medium"
+  inst_type_biz_ng_1 = "t3.medium"
+  inst_type_biz_ng_2 = "m7g.large"
+  ami_type_amd64     = "AL2_x86_64"
+  ami_type_arm64     = "AL2_ARM_64"
+}
+
+
 resource "aws_iam_role" "eks_cluster_iam_role" {
   name               = "${var.resource_prefix}-eks-cluster-role"
   assume_role_policy = <<POLICY
@@ -59,8 +68,8 @@ resource "aws_eks_cluster" "MainCluster" {
     endpoint_private_access = true
     endpoint_public_access  = false
   }
-  version = "1.24"
-  enabled_cluster_log_types = ["api", "audit", "authenticator","controllerManager","scheduler"]
+  version                   = "1.24"
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   #  kubernetes_network_config {
   #    service_ipv4_cidr = "147.206.8.0/24"
   #  }
@@ -82,25 +91,22 @@ resource "aws_eks_identity_provider_config" "ClusterOIDCConfig" {
 
   oidc {
     identity_provider_config_name = "${var.resource_prefix}-eks-cluster-oidc-config"
-    issuer_url = var.cognito_oidc_issuer_url
-    client_id = var.cognito_oidc_client_id
-    username_claim = "email"
-    groups_claim = "cognito:groups"
-    groups_prefix = "gid:"
+    issuer_url                    = var.cognito_oidc_issuer_url
+    client_id                     = var.cognito_oidc_client_id
+    username_claim                = "email"
+    groups_claim                  = "cognito:groups"
+    groups_prefix                 = "gid:"
   }
-  
+
   depends_on = [aws_eks_cluster.MainCluster]
 }
 
-data "tls_certificate" "eks-cluster-tls-cert" {
-  url = aws_eks_cluster.MainCluster.identity[0].oidc[0].issuer
-}
 resource "aws_eks_addon" "eks_main_addon" {
   cluster_name      = aws_eks_cluster.MainCluster.name
   addon_name        = "vpc-cni"
   resolve_conflicts = "OVERWRITE"
   tags              = merge(var.resource_tags, { "eks_addon" = "vpc-cni" })
-  depends_on = [aws_eks_cluster.MainCluster]
+  depends_on        = [aws_eks_cluster.MainCluster]
 }
 
 resource "aws_iam_role" "eks_node_iam_role" {
@@ -146,8 +152,8 @@ resource "aws_eks_node_group" "sys_ng" {
   cluster_name    = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-sys-ng0"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types = ["t3.medium"]
-  ami_type = "AL2_x86_64"
+  instance_types  = [local.inst_type_sys_ng]
+  ami_type        = local.ami_type_amd64
   subnet_ids      = var.node_subnet_ids
   scaling_config {
     desired_size = 1
@@ -170,8 +176,8 @@ resource "aws_eks_node_group" "biz_ng_1" {
   cluster_name    = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-biz-ng1"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types = ["t3.medium"]
-  ami_type = "AL2_x86_64"
+  instance_types  = [local.inst_type_biz_ng_1]
+  ami_type        = local.ami_type_amd64
   subnet_ids      = var.node_subnet_ids
   scaling_config {
     desired_size = 3
@@ -194,8 +200,8 @@ resource "aws_eks_node_group" "biz_ng_2" {
   cluster_name    = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-biz-ng2"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types = ["m7g.large"]
-  ami_type = "AL2_ARM_64"
+  instance_types  = [local.inst_type_biz_ng_2]
+  ami_type        = local.ami_type_arm64
   subnet_ids      = var.node_subnet_ids
   scaling_config {
     desired_size = 3

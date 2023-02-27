@@ -23,6 +23,6 @@ variable "cluster_admin_cognito_group" {
   default = "cluster-admin-group"
 }
 variable "init_eks_admin_email" {
-  type = string
+  type    = string
   default = "test@example.com"
 }

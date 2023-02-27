@@ -7,7 +7,7 @@ resource "aws_vpc" "eks_vpc" {
 
 resource "aws_default_security_group" "defaultsg" {
   vpc_id = aws_vpc.eks_vpc.id
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-DefaultSG" })
+  tags   = merge(var.resource_tags, { Name = "${var.resource_prefix}-DefaultSG" })
 }
 
 resource "aws_subnet" "publicsubnet" {
