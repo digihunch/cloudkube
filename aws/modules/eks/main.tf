@@ -68,7 +68,7 @@ resource "aws_eks_cluster" "MainCluster" {
     endpoint_private_access = true
     endpoint_public_access  = false
   }
-  version                   = "1.24"
+  version                   = "1.25"
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   #  kubernetes_network_config {
   #    service_ipv4_cidr = "147.206.8.0/24"
