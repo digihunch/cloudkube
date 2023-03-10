@@ -44,7 +44,8 @@ resource "aws_iam_policy" "bastion_eks_policy" {
     {
       "Action": [
         "iam:CreatePolicy",
-        "iam:ListPolicies"
+        "iam:ListPolicies",
+        "sts:DecodeAuthorizationMessage"
       ],
       "Effect": "Allow",
       "Resource": "*"

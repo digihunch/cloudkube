@@ -197,6 +197,7 @@ resource "aws_eks_node_group" "biz_ng_1" {
 }
 
 resource "aws_eks_node_group" "biz_ng_2" {
+  count = var.include_arm64_nodegroup ? 1 : 0
   cluster_name    = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-biz-ng2"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
