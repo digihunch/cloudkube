@@ -60,7 +60,8 @@ module "eks" {
   cognito_user_pool_id    = module.idp.cognito_info.pool_id
   cognito_oidc_client_id  = module.idp.cognito_info.client_id
   custom_key_arn          = module.kms.custom_key_id
-  include_arm64_nodegroup = var.include_arm64_nodegroup
+  amd64_nodegroup_count = var.amd64_nodegroup_count
+  arm64_nodegroup_count = var.arm64_nodegroup_count
   resource_tags           = var.Tags
   resource_prefix         = random_pet.prefix.id
   depends_on              = [time_sleep.iam_propagation, module.iam, module.network, module.kms]

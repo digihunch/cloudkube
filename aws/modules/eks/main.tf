@@ -1,7 +1,7 @@
 locals {
   inst_type_sys_ng   = "t3.medium"
-  inst_type_biz_ng_1 = "t3.medium"
-  inst_type_biz_ng_2 = "m7g.large"
+  inst_type_amd64_ng = "t3.medium"
+  inst_type_arm64_ng = "m7g.large"
   ami_type_amd64     = "AL2_x86_64"
   ami_type_arm64     = "AL2_ARM_64"
 }
@@ -172,17 +172,18 @@ resource "aws_eks_node_group" "sys_ng" {
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-System-Node-Group-0" })
 }
 
-resource "aws_eks_node_group" "biz_ng_1" {
+resource "aws_eks_node_group" "amd64_ng" {
+  count = var.amd64_nodegroup_count 
   cluster_name    = aws_eks_cluster.MainCluster.name
-  node_group_name = "${var.resource_prefix}-eks-biz-ng1"
+  node_group_name = "${var.resource_prefix}-eks-amd64-ng${count.index}"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types  = [local.inst_type_biz_ng_1]
+  instance_types  = [local.inst_type_amd64_ng]
   ami_type        = local.ami_type_amd64
-  subnet_ids      = var.node_subnet_ids
+  subnet_ids      = (var.amd64_nodegroup_count > 0) ? [var.node_subnet_ids[count.index % length(var.node_subnet_ids)]] : null
   scaling_config {
-    desired_size = 3
-    max_size     = 9
-    min_size     = 3
+    desired_size = 2
+    max_size     = 5
+    min_size     = 1
   }
   update_config {
     max_unavailable = 1
@@ -193,21 +194,26 @@ resource "aws_eks_node_group" "biz_ng_1" {
     aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnlyNodeRole,
     aws_eks_cluster.MainCluster
   ]
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Business-Node-Group-1" })
+  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-AMD64-NodeGroup${count.index}" })
 }
 
-resource "aws_eks_node_group" "biz_ng_2" {
-  count = var.include_arm64_nodegroup ? 1 : 0
+resource "aws_eks_node_group" "arm64_ng" {
+  count = var.arm64_nodegroup_count 
   cluster_name    = aws_eks_cluster.MainCluster.name
-  node_group_name = "${var.resource_prefix}-eks-biz-ng2"
+  node_group_name = "${var.resource_prefix}-eks-arm64-ng${count.index}"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types  = [local.inst_type_biz_ng_2]
+  instance_types  = [local.inst_type_arm64_ng]
   ami_type        = local.ami_type_arm64
-  subnet_ids      = var.node_subnet_ids
+  subnet_ids      = (var.arm64_nodegroup_count > 0) ? [var.node_subnet_ids[count.index % length(var.node_subnet_ids)]] : null
+  taint {
+    key = "arch"
+    value = "arm64"
+    effect = "NO_SCHEDULE"
+  }
   scaling_config {
-    desired_size = 3
-    max_size     = 9
-    min_size     = 3
+    desired_size = 2
+    max_size     = 5
+    min_size     = 1
   }
   update_config {
     max_unavailable = 1
@@ -218,5 +224,5 @@ resource "aws_eks_node_group" "biz_ng_2" {
     aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnlyNodeRole,
     aws_eks_cluster.MainCluster
   ]
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Business-Node-Group-2" })
+  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-ARM64-NodeGroup${count.index}" })
 }

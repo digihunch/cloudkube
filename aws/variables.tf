@@ -26,7 +26,11 @@ variable "init_eks_admin_email" {
   type    = string
   default = "test@example.com"
 }
-variable "include_arm64_nodegroup" {
-  type    = bool
-  default = true
+variable "amd64_nodegroup_count" {
+  type    = number
+  default = 3
+}
+variable "arm64_nodegroup_count" {
+  type    = number
+  default = 1
 }

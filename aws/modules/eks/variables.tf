@@ -16,8 +16,11 @@ variable "cognito_oidc_client_id" {
 variable "custom_key_arn" {
   type = string
 }
-variable "include_arm64_nodegroup" {
-  type = bool
+variable "arm64_nodegroup_count" {
+  type = number
+}
+variable "amd64_nodegroup_count" {
+  type = number
 }
 variable "resource_tags" {
   type = map(any)
