@@ -148,13 +148,26 @@ resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnlyNod
   role       = aws_iam_role.eks_node_iam_role.name
 }
 
+resource "aws_launch_template" "sys_lt" {
+  name = "${var.resource_prefix}-eks-sys-lt"
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${aws_eks_cluster.MainCluster.name}-SystemNode"
+    }
+  }
+}
+
 resource "aws_eks_node_group" "sys_ng" {
   cluster_name    = aws_eks_cluster.MainCluster.name
-  node_group_name = "${var.resource_prefix}-eks-sys-ng0"
+  node_group_name = "${var.resource_prefix}-eks-sys-ng"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
   instance_types  = [local.inst_type_sys_ng]
   ami_type        = local.ami_type_amd64
   subnet_ids      = var.node_subnet_ids
+  labels = {
+    cloudkube-node-type = "system-nodegroup"
+  }
   scaling_config {
     desired_size = 1
     max_size     = 1
@@ -162,6 +175,10 @@ resource "aws_eks_node_group" "sys_ng" {
   }
   update_config {
     max_unavailable = 1
+  }
+  launch_template {
+    id = aws_launch_template.sys_lt.id
+    version = "$Default"
   }
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
@@ -172,6 +189,20 @@ resource "aws_eks_node_group" "sys_ng" {
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-System-Node-Group-0" })
 }
 
+resource "aws_launch_template" "amd64_lt" {
+  count = var.amd64_nodegroup_count
+  name = "${var.resource_prefix}-eks-amd64-lt${count.index}"
+#  placement {
+#    group_name = "amd64-placementgroup-${count.index}" 
+#  }
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${aws_eks_cluster.MainCluster.name}-AMD64-NodeGroup${count.index}-Node"
+    }
+  }
+}
+
 resource "aws_eks_node_group" "amd64_ng" {
   count = var.amd64_nodegroup_count 
   cluster_name    = aws_eks_cluster.MainCluster.name
@@ -180,6 +211,9 @@ resource "aws_eks_node_group" "amd64_ng" {
   instance_types  = [local.inst_type_amd64_ng]
   ami_type        = local.ami_type_amd64
   subnet_ids      = (var.amd64_nodegroup_count > 0) ? [var.node_subnet_ids[count.index % length(var.node_subnet_ids)]] : null
+  labels = {
+    cloudkube-node-type = "amd64-nodegroup-${count.index}"
+  }
   scaling_config {
     desired_size = 2
     max_size     = 5
@@ -187,6 +221,10 @@ resource "aws_eks_node_group" "amd64_ng" {
   }
   update_config {
     max_unavailable = 1
+  }
+  launch_template {
+    id = aws_launch_template.amd64_lt[count.index].id
+    version = "$Default"
   }
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
@@ -197,6 +235,20 @@ resource "aws_eks_node_group" "amd64_ng" {
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-AMD64-NodeGroup${count.index}" })
 }
 
+resource "aws_launch_template" "arm64_lt" {
+  count = var.arm64_nodegroup_count
+  name = "${var.resource_prefix}-eks-arm64-lt${count.index}"
+#  placement {
+#    group_name = "arm64-placementgroup-${count.index}" 
+#  }
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${aws_eks_cluster.MainCluster.name}-ARM64-NodeGroup${count.index}-Node"
+    }
+  }
+}
+
 resource "aws_eks_node_group" "arm64_ng" {
   count = var.arm64_nodegroup_count 
   cluster_name    = aws_eks_cluster.MainCluster.name
@@ -205,6 +257,9 @@ resource "aws_eks_node_group" "arm64_ng" {
   instance_types  = [local.inst_type_arm64_ng]
   ami_type        = local.ami_type_arm64
   subnet_ids      = (var.arm64_nodegroup_count > 0) ? [var.node_subnet_ids[count.index % length(var.node_subnet_ids)]] : null
+  labels = {
+    cloudkube-node-type = "arm64-nodegroup-${count.index}"
+  }
   taint {
     key = "arch"
     value = "arm64"
@@ -217,6 +272,10 @@ resource "aws_eks_node_group" "arm64_ng" {
   }
   update_config {
     max_unavailable = 1
+  }
+  launch_template {
+    id = aws_launch_template.arm64_lt[count.index].id
+    version = "$Default"
   }
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
