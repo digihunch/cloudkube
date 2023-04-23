@@ -148,6 +148,11 @@ resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnlyNod
   role       = aws_iam_role.eks_node_iam_role.name
 }
 
+resource "aws_iam_role_policy_attachment" "AmazonSSMPolicyNodeRole" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  role       = aws_iam_role.eks_node_iam_role.name
+}
+
 resource "aws_launch_template" "sys_lt" {
   name = "${var.resource_prefix}-eks-sys-lt"
   tag_specifications {
@@ -281,6 +286,7 @@ resource "aws_eks_node_group" "arm64_ng" {
     aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
     aws_iam_role_policy_attachment.AmazonEKSCNIPolicyNodeRole,
     aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnlyNodeRole,
+    aws_iam_role_policy_attachment.AmazonSSMPolicyNodeRole,
     aws_eks_cluster.MainCluster
   ]
   tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-ARM64-NodeGroup${count.index}" })
