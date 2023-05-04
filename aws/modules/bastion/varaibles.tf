@@ -1,7 +1,10 @@
 variable "ssh_client_cidr_block" {
   type = string
 }
-variable "public_key_data" {
+#variable "public_key_data" {
+#  type = string
+#}
+variable "ssh_pubkey_name" {
   type = string
 }
 variable "mgmt_subnet_id" {

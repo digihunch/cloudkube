@@ -1,3 +1,8 @@
+resource "aws_key_pair" "ssh-pubkey" {
+  key_name   = "${var.resource_prefix}-ssh-pubkey"
+  public_key = var.ssh_pubkey_data
+}
+
 resource "aws_kms_key" "customKey" {
   description             = "This key is used to encrypt resources"
   deletion_window_in_days = 10

@@ -1,7 +1,7 @@
-resource "aws_key_pair" "runner-pubkey" {
-  key_name   = "${var.resource_prefix}-runner-pubkey"
-  public_key = var.public_key_data
-}
+#resource "aws_key_pair" "runner-pubkey" {
+#  key_name   = "${var.resource_prefix}-runner-pubkey"
+#  public_key = var.public_key_data
+#}
 
 resource "aws_security_group" "bastionsecgrp" {
   name        = "${var.resource_prefix}-cloudkube-sg"
@@ -69,7 +69,7 @@ resource "aws_instance" "bastion" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = "t3.medium"
   user_data              = data.cloudinit_config.bastion_cloudinit.rendered
-  key_name               = aws_key_pair.runner-pubkey.key_name
+  key_name               = var.ssh_pubkey_name 
   vpc_security_group_ids = [aws_security_group.bastionsecgrp.id]
   subnet_id              = var.mgmt_subnet_id
   iam_instance_profile   = aws_iam_instance_profile.inst_profile.name

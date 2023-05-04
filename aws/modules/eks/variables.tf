@@ -4,6 +4,9 @@ variable "node_subnet_ids" {
 variable "vpc_id" {
   type = string
 }
+variable "ssh_pubkey_name" {
+  type = string
+}
 variable "cognito_oidc_issuer_url" {
   type = string
 }

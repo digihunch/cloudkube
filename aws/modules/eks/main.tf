@@ -155,6 +155,7 @@ resource "aws_iam_role_policy_attachment" "AmazonSSMPolicyNodeRole" {
 
 resource "aws_launch_template" "sys_lt" {
   name = "${var.resource_prefix}-eks-sys-lt"
+  key_name = var.ssh_pubkey_name
   tag_specifications {
     resource_type = "instance"
     tags = {
@@ -197,6 +198,7 @@ resource "aws_eks_node_group" "sys_ng" {
 resource "aws_launch_template" "amd64_lt" {
   count = var.amd64_nodegroup_count
   name = "${var.resource_prefix}-eks-amd64-lt${count.index}"
+  key_name = var.ssh_pubkey_name
 #  placement {
 #    group_name = "amd64-placementgroup-${count.index}" 
 #  }
@@ -243,6 +245,7 @@ resource "aws_eks_node_group" "amd64_ng" {
 resource "aws_launch_template" "arm64_lt" {
   count = var.arm64_nodegroup_count
   name = "${var.resource_prefix}-eks-arm64-lt${count.index}"
+  key_name = var.ssh_pubkey_name
 #  placement {
 #    group_name = "arm64-placementgroup-${count.index}" 
 #  }

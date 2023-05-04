@@ -1,9 +1,10 @@
 resource "random_pet" "prefix" {}
 
-module "kms" {
-  source          = "./modules/kms"
+module "encryption" {
+  source          = "./modules/encryption"
   resource_tags   = var.Tags
   resource_prefix = random_pet.prefix.id
+  ssh_pubkey_data = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "")
 }
 
 module "idp" {
@@ -55,16 +56,17 @@ module "eks" {
   }
   node_subnet_ids = module.network.vpc_info.node_subnet_ids
   vpc_id          = module.network.vpc_info.vpc_id
+  ssh_pubkey_name = module.encryption.ssh_pubkey_name
   #  pod_subnet_id =  module.network.vpc_info.pod_subnet_id 
   cognito_oidc_issuer_url = module.idp.cognito_info.issuer_url
   cognito_user_pool_id    = module.idp.cognito_info.pool_id
   cognito_oidc_client_id  = module.idp.cognito_info.client_id
-  custom_key_arn          = module.kms.custom_key_id
+  custom_key_arn          = module.encryption.custom_key_id
   amd64_nodegroup_count = var.amd64_nodegroup_count
   arm64_nodegroup_count = var.arm64_nodegroup_count
   resource_tags           = var.Tags
   resource_prefix         = random_pet.prefix.id
-  depends_on              = [time_sleep.iam_propagation, module.iam, module.network, module.kms]
+  depends_on              = [time_sleep.iam_propagation, module.iam, module.network, module.encryption]
 }
 
 module "bastion" {
@@ -73,7 +75,7 @@ module "bastion" {
     aws = aws.power-user
   }
   mgmt_subnet_id              = module.network.vpc_info.mgmt_subnet_id
-  public_key_data             = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "")
+  ssh_pubkey_name = module.encryption.ssh_pubkey_name 
   eks_name                    = module.eks.eks_name
   eks_arn                     = module.eks.eks_arn
   cognito_oidc_issuer_url     = module.idp.cognito_info.issuer_url
@@ -83,8 +85,8 @@ module "bastion" {
   eks_manager_role_name       = module.iam.iam_info.eks_manager_role_name
   ssh_client_cidr_block       = var.cli_cidr_block
   cluster_admin_cognito_group = var.cluster_admin_cognito_group
-  custom_key_arn              = module.kms.custom_key_id
+  custom_key_arn              = module.encryption.custom_key_id
   resource_tags               = var.Tags
   resource_prefix             = random_pet.prefix.id
-  depends_on                  = [module.eks, module.network, module.iam, module.kms]
+  depends_on                  = [module.eks, module.network, module.iam, module.encryption]
 }
