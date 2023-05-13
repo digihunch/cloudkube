@@ -1,14 +1,11 @@
-variable "ssh_client_cidr_block" {
-  type = string
-}
-#variable "public_key_data" {
-#  type = string
-#}
 variable "ssh_pubkey_name" {
   type = string
 }
-variable "mgmt_subnet_id" {
+variable "vpc_id" {
   type = string
+}
+variable "bastion_subnet_ids" {
+  type = list(any)
 }
 variable "eks_name" {
   type = string

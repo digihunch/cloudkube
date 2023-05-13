@@ -1,3 +1,3 @@
 output "bastion_info" {
-  value = aws_instance.bastion.public_dns
+  value = join(",",data.aws_instances.bastion_instances.ids)
 }

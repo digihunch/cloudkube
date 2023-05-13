@@ -1,12 +1,7 @@
 data "aws_region" "this" {}
-#data "aws_caller_identity" "current" {}
 
 data "aws_iam_role" "eks_manager_role" {
   name = var.eks_manager_role_name
-}
-
-data "aws_subnet" "mgmt_subnet" {
-  id = var.mgmt_subnet_id
 }
 
 data "aws_ami" "amazon_linux" {
@@ -14,7 +9,7 @@ data "aws_ami" "amazon_linux" {
   owners      = ["amazon"]
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm*"]
+    values = ["al2023-ami-2023*"]
   }
   filter {
     name   = "virtualization-type"
@@ -46,3 +41,13 @@ data "cloudinit_config" "bastion_cloudinit" {
     content      = file("${path.module}/custom_userdata.sh")
   }
 }
+
+data "aws_instances" "bastion_instances" {
+  instance_tags = {
+    purpose = "bastion"
+    prefix = var.resource_prefix
+    Name = "${var.resource_prefix}-bastion"
+  }
+  depends_on = [aws_autoscaling_group.bastion_host_asg]
+}
+

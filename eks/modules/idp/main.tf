@@ -12,9 +12,11 @@ resource "aws_cognito_user_pool" "cognito_user_pool" {
     allow_admin_create_user_only = false
   }
   username_attributes = ["email"]
-  #auto_verified_attributes = ["email"]
   username_configuration {
     case_sensitive = false
+  }
+  lifecycle {
+    ignore_changes = [account_recovery_setting,password_policy]
   }
 }
 
