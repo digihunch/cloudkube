@@ -1,5 +1,5 @@
 locals {
-  eks_cluster_version = "1.26"
+  eks_cluster_version = "1.27"
   inst_type_amd64_ng = "t3.medium"
   inst_type_arm64_ng = "m7g.large"
   ami_type_amd64     = "AL2_x86_64"
@@ -101,7 +101,8 @@ resource "aws_eks_identity_provider_config" "ClusterOIDCConfig" {
 resource "aws_eks_addon" "eks_main_addon" {
   cluster_name      = aws_eks_cluster.MainCluster.name
   addon_name        = "vpc-cni"
-  resolve_conflicts = "OVERWRITE"
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "NONE"
   tags              = merge(var.resource_tags, { "eks_addon" = "vpc-cni" })
   depends_on        = [aws_eks_cluster.MainCluster]
 }

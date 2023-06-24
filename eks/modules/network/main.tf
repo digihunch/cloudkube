@@ -62,7 +62,6 @@ resource "aws_internet_gateway" "internet_gw" {
 
 resource "aws_eip" "nat_eips" {
   count = length(var.public_subnets_cidr_list)
-  vpc   = true
 }
 
 resource "aws_nat_gateway" "nat_gws" {
