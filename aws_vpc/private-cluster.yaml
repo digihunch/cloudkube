@@ -1,0 +1,33 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: private-cluster
+  region: us-west-2
+  version: "1.27"
+privateCluster:
+  enabled: true 
+  additionalEndpointServices:
+  - "cloudformation"
+  - "autoscaling"
+  - "logs"
+vpc:
+  id: "vpc-056980a5317dea4e8"
+  subnets:
+    private:
+      us-west-2a:
+        id: "subnet-0833bce39820f6892"
+      us-west-2b:
+        id: "subnet-03ac8898ea0dbb275"
+      us-west-2c:
+        id: "subnet-04a2a6bf9982eaccf"
+managedNodeGroups:
+  - name: managed-ng-1
+    instanceType: m5.large 
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 2
+    privateNetworking: true
+    volumeSize: 80
+    ssh:
+      allow: true
+      enableSsm: true
