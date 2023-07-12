@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 metadata:
   name: private-cluster
-  region: us-west-2
+  region: $EKS_REGION 
   version: "1.27"
 privateCluster:
   enabled: true 
@@ -11,15 +11,15 @@ privateCluster:
   - "autoscaling"
   - "logs"
 vpc:
-  id: "vpc-056980a5317dea4e8"
+  id: "$EKS_VPC_ID"
   subnets:
     private:
-      us-west-2a:
-        id: "subnet-0833bce39820f6892"
-      us-west-2b:
-        id: "subnet-03ac8898ea0dbb275"
-      us-west-2c:
-        id: "subnet-04a2a6bf9982eaccf"
+      $EKS_AZ1:
+        id: "$EKS_SUBNET_ID1"
+      $EKS_AZ2:
+        id: "$EKS_SUBNET_ID2"
+      $EKS_AZ3:
+        id: "$EKS_SUBNET_ID3"
 managedNodeGroups:
   - name: managed-ng-1
     instanceType: m5.large 
