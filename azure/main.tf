@@ -88,20 +88,20 @@ module "aks-cluster" {
         "px/metadata-node" = "true"
       }
       node_taints = null
-#      }, {
-#      name                                = "storagenp"
-#      vm_size                             = "Standard_D2s_v3"
-#      zones                               = ["1", "2", "3"]
-#      node_count                          = 3
-#      cluster_auto_scaling                = false
-#      cluster_auto_scaling_min_node_count = 3
-#      cluster_auto_scaling_max_node_count = 3
-#      node_labels = {
-#        pool_name = "np-storage"
-#      }
-#      node_taints = [
-#        "storage-node=true:NoSchedule"
-#      ]
+      }, {
+      name                                = "storagenp"
+      vm_size                             = "Standard_D2s_v3"
+      zones                               = ["1", "2", "3"]
+      node_count                          = 3
+      cluster_auto_scaling                = false
+      cluster_auto_scaling_min_node_count = 3
+      cluster_auto_scaling_max_node_count = 3
+      node_labels = {
+        pool_name = "np-storage"
+      }
+      node_taints = [
+        "storage-node=true:NoSchedule"
+      ]
     }]
     auto_scaler_profile = {
       balance_similar_node_groups      = false,
