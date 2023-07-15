@@ -9,7 +9,7 @@ resource "azurerm_user_assigned_identity" "aks_byo_id" {
 
 resource "azurerm_role_definition" "kubelet_id_assigner" {
   role_definition_id = random_uuid.customrole.result
-  name               = "CustomKubeletIdentityPermission"
+  name               = "${var.resource_prefix}-CustomKubeletIdentityPermission"
   scope              = data.azurerm_resource_group.cluster_rg.id
 
   permissions {
@@ -30,6 +30,12 @@ resource "azurerm_role_assignment" "kubeletidassigner_assignment" {
 
 resource "azurerm_role_assignment" "networkcontributor_assignment" {
   role_definition_name             = "Network Contributor"
+  scope                            = data.azurerm_resource_group.cluster_rg.id
+  principal_id                     = azurerm_user_assigned_identity.aks_byo_id.principal_id
+  skip_service_principal_aad_check = true
+}
+resource "azurerm_role_assignment" "managedidentityoperator_assignment" {
+  role_definition_name             = "Managed Identity Operator"
   scope                            = data.azurerm_resource_group.cluster_rg.id
   principal_id                     = azurerm_user_assigned_identity.aks_byo_id.principal_id
   skip_service_principal_aad_check = true

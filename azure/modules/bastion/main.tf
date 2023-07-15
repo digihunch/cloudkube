@@ -37,11 +37,11 @@ resource "azurerm_linux_virtual_machine" "bastion_host" {
   }
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    offer     = "0001-com-ubuntu-minimal-lunar"  # az vm image list-offers --location canadacentral --publisher Canonical -o table
+    sku       = "minimal-23_04"  # az vm image list-skus --location canadacentral --publisher Canonical --offer 0001-com-ubuntu-minimal-lunar -o table
     version   = "latest"
   }
-  custom_data                     = data.template_cloudinit_config.init_config.rendered
+  custom_data = data.cloudinit_config.bastion_cloudinit.rendered
   disable_password_authentication = true
   admin_ssh_key {
     username   = var.os_user

@@ -21,7 +21,7 @@ resource "azurerm_kubernetes_cluster" "default" {
     # https://docs.microsoft.com/en-us/azure/aks/configure-azure-cni#install-the-aks-preview-azure-cli
     vnet_subnet_id = var.aks_spec.node_subnet_id
 
-    availability_zones = var.aks_spec.system_node_pool.zones
+    zones = var.aks_spec.system_node_pool.zones
     # https://docs.microsoft.com/en-us/azure/aks/availability-zones#verify-node-distribution-across-zones
     node_labels = var.aks_spec.system_node_pool.node_labels
     node_taints = var.aks_spec.system_node_pool.node_taints
@@ -29,7 +29,7 @@ resource "azurerm_kubernetes_cluster" "default" {
 
   identity {
     type                      = "UserAssigned"
-    user_assigned_identity_id = var.aks_byo_mi.id
+    identity_ids = [var.aks_byo_mi.id]
   }
 
   kubelet_identity {
@@ -38,13 +38,9 @@ resource "azurerm_kubernetes_cluster" "default" {
     user_assigned_identity_id = var.aks_byo_mi.id
   }
 
-  role_based_access_control {
-    enabled = true
-    azure_active_directory {
-      managed                = true
-      azure_rbac_enabled     = true
-      admin_group_object_ids = var.aks_spec.admin_group_ad_object_ids
-    }
+  azure_active_directory_role_based_access_control {
+    managed                = true
+    admin_group_object_ids = var.aks_spec.admin_group_ad_object_ids
   }
 
   network_profile {
@@ -52,22 +48,10 @@ resource "azurerm_kubernetes_cluster" "default" {
     network_policy = "calico"
     #outbound_type = "userDefinedRouting" # UDR requires presence of a route for subnet pointing to firewall IP. 
   }
-  addon_profile {
-    oms_agent {
-      enabled                    = var.aks_spec.laws_id != null
-      log_analytics_workspace_id = var.aks_spec.laws_id
-    }
-    # kube_dashboard is deprecated starting 1.19
-    azure_policy {
-      enabled = true
-    }
-    ingress_application_gateway {
-      enabled = false
-    }
-    http_application_routing {
-      enabled = false
-    }
-  }
+  azure_policy_enabled = true
+#  oms_agent {
+#    log_analytics_workspace_id = var.aks_spec.laws_id
+#  }
   linux_profile {
     admin_username = var.aks_spec.node_os_user
     ssh_key {
@@ -103,7 +87,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload_node_pool" {
   pod_subnet_id         = var.aks_spec.pod_subnet_id
   vnet_subnet_id        = var.aks_spec.node_subnet_id
   vm_size               = each.value.vm_size
-  availability_zones    = each.value.zones
+  zones    = each.value.zones
   node_count            = each.value.node_count
   enable_auto_scaling   = each.value.cluster_auto_scaling
   max_count             = each.value.cluster_auto_scaling ? each.value.cluster_auto_scaling_max_node_count : null
