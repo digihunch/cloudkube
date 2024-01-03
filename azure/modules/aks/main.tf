@@ -59,6 +59,9 @@ resource "azurerm_kubernetes_cluster" "default" {
     }
   }
 
+  workload_identity_enabled = true
+  oidc_issuer_enabled = true
+
   auto_scaler_profile {
     balance_similar_node_groups      = var.aks_spec.auto_scaler_profile.balance_similar_node_groups
     expander                         = var.aks_spec.auto_scaler_profile.expander

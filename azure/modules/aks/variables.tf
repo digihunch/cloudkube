@@ -72,7 +72,7 @@ variable "aks_spec" {
   })
   default = {
     cluster_name              = "default_cluster"
-    kubernetes_version        = "1.27.1"
+    kubernetes_version        = "1.28.3"
     pod_subnet_id             = "unknown"
     node_subnet_id            = "unknown"
     laws_id                   = "unknown"

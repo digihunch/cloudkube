@@ -32,3 +32,7 @@ variable "KeepDiagLogging" {
   type    = bool
   default = false
 }
+variable "kubernetes_version" {
+  type = string
+  default = "1.28.3"
+}

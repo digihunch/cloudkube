@@ -55,7 +55,7 @@ module "aks-cluster" {
   aks_byo_mi        = module.byo_identity.managed_id
   aks_spec = {
     cluster_name              = "aks_cluster_main"
-    kubernetes_version        = "1.27.1"
+    kubernetes_version        = var.kubernetes_version
     pod_subnet_id             = module.network.pod_subnet_id
     node_subnet_id            = module.network.node_subnet_id
     laws_id                   = var.KeepDiagLogging ? module.log-analytics[0].laws_id : null
