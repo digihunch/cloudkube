@@ -1,5 +1,5 @@
 locals {
-  eks_cluster_version = "1.27"
+  eks_cluster_version = "1.28"
   inst_type_amd64_ng = "t3.medium"
   inst_type_arm64_ng = "m7g.large"
   ami_type_amd64     = "AL2_x86_64"
