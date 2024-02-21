@@ -1,11 +1,10 @@
-locals {
-  eks_cluster_version = "1.28"
-  inst_type_amd64_ng = "t3.medium"
-  inst_type_arm64_ng = "m7g.large"
-  ami_type_amd64     = "AL2_x86_64"
-  ami_type_arm64     = "AL2_ARM_64"
-}
-
+#locals {
+#  eks_cluster_version = "1.28"
+#  inst_type_amd64_ng = "t3.medium"
+#  inst_type_arm64_ng = "m7g.large"
+#  ami_type_amd64     = "AL2_x86_64"
+#  ami_type_arm64     = "AL2_ARM_64"
+#}
 
 resource "aws_iam_role" "eks_cluster_iam_role" {
   name               = "${var.resource_prefix}-eks-cluster-role"
@@ -68,7 +67,7 @@ resource "aws_eks_cluster" "MainCluster" {
     endpoint_private_access = true
     endpoint_public_access  = false
   }
-  version                   = local.eks_cluster_version
+  version                   = var.kubernetes_version 
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   encryption_config {
     provider {
@@ -168,8 +167,8 @@ resource "aws_eks_node_group" "amd64_ng" {
   cluster_name    = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-amd64-ng${count.index}"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types  = [local.inst_type_amd64_ng]
-  ami_type        = local.ami_type_amd64
+  instance_types  = [var.amd64_nodegroup_inst_type]
+  ami_type        = var.amd64_nodegroup_ami_type
   subnet_ids      = (var.amd64_nodegroup_count > 0) ? [var.node_subnet_ids[count.index % length(var.node_subnet_ids)]] : null
   labels = {
     cloudkube-node-type = "amd64-nodegroup-${count.index}"
@@ -212,8 +211,8 @@ resource "aws_eks_node_group" "arm64_ng" {
   cluster_name    = aws_eks_cluster.MainCluster.name
   node_group_name = "${var.resource_prefix}-eks-arm64-ng${count.index}"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types  = [local.inst_type_arm64_ng]
-  ami_type        = local.ami_type_arm64
+  instance_types  = [var.arm64_nodegroup_inst_type]
+  ami_type        = var.arm64_nodegroup_ami_type
   subnet_ids      = (var.arm64_nodegroup_count > 0) ? [var.node_subnet_ids[count.index % length(var.node_subnet_ids)]] : null
   labels = {
     cloudkube-node-type = "arm64-nodegroup-${count.index}"

@@ -54,3 +54,23 @@ variable "arm64_nodegroup_count" {
   type    = number
   default = 1
 }
+variable "amd64_nodegroup_inst_type" {
+  type    = string 
+  default = "t3.medium"
+}
+variable "arm64_nodegroup_inst_type" {
+  type    = string
+  default = "m7g.large"
+}
+variable "amd64_nodegroup_ami_type" {
+  type    = string
+  default = "AL2_x86_64"
+}
+variable "arm64_nodegroup_ami_type" {
+  type    = string
+  default = "AL2_ARM_64"
+}
+variable "kubernetes_version" {
+  type    = string
+  default = "1.29"
+}

@@ -25,6 +25,21 @@ variable "arm64_nodegroup_count" {
 variable "amd64_nodegroup_count" {
   type = number
 }
+variable "amd64_nodegroup_inst_type" {
+  type = string
+}
+variable "arm64_nodegroup_inst_type" {
+  type = string
+}
+variable "amd64_nodegroup_ami_type" {
+  type = string
+}
+variable "arm64_nodegroup_ami_type" {
+  type = string
+}
+variable "kubernetes_version" {
+  type = string
+}
 variable "resource_tags" {
   type = map(any)
 }

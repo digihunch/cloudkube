@@ -65,6 +65,11 @@ module "eks" {
   custom_key_arn          = module.encryption.custom_key_id
   amd64_nodegroup_count = var.amd64_nodegroup_count
   arm64_nodegroup_count = var.arm64_nodegroup_count
+  amd64_nodegroup_inst_type = var.amd64_nodegroup_inst_type
+  arm64_nodegroup_inst_type = var.arm64_nodegroup_inst_type
+  amd64_nodegroup_ami_type = var.amd64_nodegroup_ami_type
+  arm64_nodegroup_ami_type = var.arm64_nodegroup_ami_type
+  kubernetes_version = var.kubernetes_version
   resource_tags           = var.Tags
   resource_prefix         = random_pet.prefix.id
   depends_on              = [time_sleep.iam_propagation, module.iam, module.network, module.encryption]
