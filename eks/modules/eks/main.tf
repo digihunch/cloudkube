@@ -1,11 +1,3 @@
-#locals {
-#  eks_cluster_version = "1.28"
-#  inst_type_amd64_ng = "t3.medium"
-#  inst_type_arm64_ng = "m7g.large"
-#  ami_type_amd64     = "AL2_x86_64"
-#  ami_type_arm64     = "AL2_ARM_64"
-#}
-
 resource "aws_iam_role" "eks_cluster_iam_role" {
   name               = "${var.resource_prefix}-eks-cluster-role"
   assume_role_policy = <<POLICY
