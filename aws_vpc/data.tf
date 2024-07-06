@@ -2,7 +2,7 @@ data "aws_region" "this" {}
 
 data "aws_availability_zones" "this" {}
 
-data "aws_ami" "amazon_linux" {
+data "aws_ami" "default_ami" {
   most_recent = true
   owners      = ["amazon"]
   filter {
@@ -19,11 +19,19 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
+data "aws_ami" "preferred_ami" {
+  count = var.preferred_ami_id != "" ? 1 : 0
+  filter {
+    name   = "image-id"
+    values = [var.preferred_ami_id]
+  }
+}
+
 data "aws_instances" "bastion" {
   instance_tags = {
     purpose = "bastion"
-    prefix = var.resource_prefix
-    Name = "${var.resource_prefix}-bastion"
+    prefix  = var.resource_prefix
+    Name    = "${var.resource_prefix}-bastion"
   }
   depends_on = [aws_autoscaling_group.bastion_host_asg]
 }
@@ -33,7 +41,7 @@ data "cloudinit_config" "bastion_cloudinit" {
   part {
     content_type = "text/x-shellscript"
     content = templatefile("${path.module}/myuserdata.tpl", {
-      aws_region                  = data.aws_region.this.name
+      aws_region = data.aws_region.this.name
     })
   }
 }

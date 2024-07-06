@@ -1,6 +1,6 @@
 resource "aws_key_pair" "ssh-pubkey" {
   key_name   = "${var.resource_prefix}-ssh-pubkey"
-  public_key = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "") 
+  public_key = var.pubkey_data != null ? var.pubkey_data : (fileexists(var.pubkey_path) ? file(var.pubkey_path) : "")
 }
 
 resource "aws_vpc" "eks_vpc" {
@@ -66,7 +66,7 @@ resource "aws_internet_gateway" "internet_gw" {
 }
 
 resource "aws_eip" "nat_eips" {
-  count = length(var.public_subnets_cidr_list)
+  count  = length(var.public_subnets_cidr_list)
   domain = "vpc"
 }
 
@@ -138,7 +138,7 @@ resource "aws_route_table_association" "pod_rt_assocs" {
 resource "aws_security_group" "bastionsecgrp" {
   name        = "${var.resource_prefix}-cloudkube-sg"
   description = "security group for bastion"
-  vpc_id      = aws_vpc.eks_vpc.id 
+  vpc_id      = aws_vpc.eks_vpc.id
 
   egress {
     description = "Outbound"
@@ -200,7 +200,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "bastion_role_eks_policy_attachment" {
-  role       = aws_iam_role.bastion_instance_role.name 
+  role       = aws_iam_role.bastion_instance_role.name
   policy_arn = aws_iam_policy.bastion_eks_policy.arn
 }
 
@@ -211,15 +211,16 @@ resource "aws_iam_role_policy_attachment" "bastion_role_ssm_policy_attachment" {
 
 resource "aws_iam_instance_profile" "inst_profile" {
   name = "${var.resource_prefix}-inst-profile"
-  role = aws_iam_role.bastion_instance_role.name 
+  role = aws_iam_role.bastion_instance_role.name
 }
 
 resource "aws_launch_template" "bastion_launch_template" {
   name          = "${var.resource_prefix}-bastion-launch-template"
-  key_name      = aws_key_pair.ssh-pubkey.key_name 
-  instance_type = "t2.micro" 
-  user_data     = data.cloudinit_config.bastion_cloudinit.rendered 
-  image_id      = data.aws_ami.amazon_linux.id
+  key_name      = aws_key_pair.ssh-pubkey.key_name
+  instance_type = var.instance_type
+  user_data     = data.cloudinit_config.bastion_cloudinit.rendered
+  image_id      = var.preferred_ami_id != "" ? data.aws_ami.preferred_ami[0].id : data.aws_ami.default_ami.id
+
   iam_instance_profile {
     name = aws_iam_instance_profile.inst_profile.name
   }
@@ -229,9 +230,9 @@ resource "aws_launch_template" "bastion_launch_template" {
     http_put_response_hop_limit = 2
   }
   block_device_mappings {
-    device_name = "/dev/xvda"
+    device_name = var.preferred_ami_id != "" ? data.aws_ami.preferred_ami[0].root_device_name : data.aws_ami.default_ami.root_device_name
     ebs {
-      volume_size = 30
+      volume_size = 100
       encrypted   = true
     }
   }
@@ -239,23 +240,23 @@ resource "aws_launch_template" "bastion_launch_template" {
   tag_specifications {
     resource_type = "instance"
     tags = {
-      prefix = var.resource_prefix
+      prefix  = var.resource_prefix
       purpose = "bastion"
-      Name = "${var.resource_prefix}-bastion"
+      Name    = "${var.resource_prefix}-bastion"
     }
   }
-} 
+}
 
 resource "aws_autoscaling_group" "bastion_host_asg" {
-  vpc_zone_identifier = aws_subnet.internalsvcsubnets[*].id 
-  desired_capacity   = 1
-  max_size           = 1
-  min_size           = 1
-  name = "${var.resource_prefix}-bastion-asg"
+  vpc_zone_identifier = aws_subnet.internalsvcsubnets[*].id
+  desired_capacity    = 1
+  max_size            = 1
+  min_size            = 1
+  name                = "${var.resource_prefix}-bastion-asg"
 
   launch_template {
     id      = aws_launch_template.bastion_launch_template.id
-    version = aws_launch_template.bastion_launch_template.latest_version 
+    version = aws_launch_template.bastion_launch_template.latest_version
   }
 }
 

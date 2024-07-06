@@ -26,6 +26,14 @@ variable "pubkey_data" {
   type    = string
   default = null
 }
+variable "instance_type" {
+  type    = string
+  default = "t2.micro" #g4dn.xlarge for GPU 
+}
+variable "preferred_ami_id" {
+  type    = string
+  default = "" #ami-04b70fa74e45c3917 for ubuntu 2024 us-east-1
+}
 variable "pubkey_path" {
   type    = string
   default = "~/.ssh/id_rsa.pub"

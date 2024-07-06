@@ -1,5 +1,5 @@
 output "bastion" {
-  value = join(",",data.aws_instances.bastion.ids)
+  value = join(",", data.aws_instances.bastion.ids)
 }
 #output "vpc_id" {
 #  value = aws_vpc.eks_vpc.id 
