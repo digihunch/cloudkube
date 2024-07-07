@@ -69,7 +69,7 @@ terraform destroy
 ```
 
 ## AWS VPC
-If the EKS template is too opinionated and the user only needs a basic and secure networking foundation, this template in [`aws_vpc`](https://github.com/digihunch/cloudkube/tree/main/aws_vpc) directory provisions the required networking components (e.g. VPC, subnet, etc) with labelling as well as a bastion host. Users needs to access the bastion host in private subnet via Session Manager. To SSH to the bastion host, configure [Session Manager plugin for AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html). 
+If the EKS template is too opinionated and the user only needs a basic and secure networking foundation, this template in [`vpc-base`](https://github.com/digihunch/vpc-base) provisions the required networking components (e.g. VPC, subnet, etc) with labelling as well as a bastion host. Users needs to access the bastion host in private subnet via Session Manager. To SSH to the bastion host, configure [Session Manager plugin for AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html). 
 
 You may use `eksctl` to build cluster on the existing networking, or build a [ROSA](https://docs.openshift.com/rosa/welcome/index.html) cluster.
 
