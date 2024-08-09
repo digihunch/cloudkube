@@ -1,6 +1,6 @@
 resource "aws_cognito_user_pool" "cognito_user_pool" {
   name = "${var.resource_prefix}-oidc-userpool"
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-cognito-user-pool" })
+  tags = { Name = "${var.resource_prefix}-cognito-user-pool" }
   password_policy {
     require_lowercase = false
     require_numbers   = false
@@ -16,7 +16,7 @@ resource "aws_cognito_user_pool" "cognito_user_pool" {
     case_sensitive = false
   }
   lifecycle {
-    ignore_changes = [account_recovery_setting,password_policy]
+    ignore_changes = [account_recovery_setting, password_policy]
   }
 }
 

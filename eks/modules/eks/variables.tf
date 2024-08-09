@@ -19,29 +19,11 @@ variable "cognito_oidc_client_id" {
 variable "custom_key_arn" {
   type = string
 }
-variable "arm64_nodegroup_count" {
-  type = number
-}
-variable "amd64_nodegroup_count" {
-  type = number
-}
-variable "amd64_nodegroup_inst_type" {
-  type = string
-}
-variable "arm64_nodegroup_inst_type" {
-  type = string
-}
-variable "amd64_nodegroup_ami_type" {
-  type = string
-}
-variable "arm64_nodegroup_ami_type" {
-  type = string
+variable "node_group_configs" {
+  type = list(map(any))
 }
 variable "kubernetes_version" {
   type = string
-}
-variable "resource_tags" {
-  type = map(any)
 }
 variable "resource_prefix" {
   type = string

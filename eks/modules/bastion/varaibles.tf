@@ -22,9 +22,6 @@ variable "cognito_user_pool_id" {
 variable "cognito_oidc_client_id" {
   type = string
 }
-variable "resource_tags" {
-  type = map(any)
-}
 variable "resource_prefix" {
   type = string
 }

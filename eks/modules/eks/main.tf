@@ -14,19 +14,22 @@ resource "aws_iam_role" "eks_cluster_iam_role" {
   ]
 }
 POLICY
-  tags               = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Cluster-Role" })
-}
-
-resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster_iam_role.name
+  tags               = { Name = "${var.resource_prefix}-EKS-Cluster-Role" }
 }
 
 # Optionally, enable Security Groups for Pods
 # Reference: https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
-resource "aws_iam_role_policy_attachment" "AmazonEKSVPCResourceController" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+resource "aws_iam_role_policy_attachment" "cluster_role_to_managed_policy" {
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+    "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+  ])
   role       = aws_iam_role.eks_cluster_iam_role.name
+  policy_arn = each.value
+}
+
+data "aws_vpc" "eksVPC" {
+  id = var.vpc_id
 }
 
 resource "aws_security_group" "cluster_security_group" {
@@ -47,7 +50,7 @@ resource "aws_security_group" "cluster_security_group" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-Cluster-SG" })
+  tags = { Name = "${var.resource_prefix}-Cluster-SG" }
 }
 
 resource "aws_eks_cluster" "MainCluster" {
@@ -59,7 +62,7 @@ resource "aws_eks_cluster" "MainCluster" {
     endpoint_private_access = true
     endpoint_public_access  = false
   }
-  version                   = var.kubernetes_version 
+  version                   = var.kubernetes_version
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   encryption_config {
     provider {
@@ -67,11 +70,8 @@ resource "aws_eks_cluster" "MainCluster" {
     }
     resources = ["secrets"]
   }
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-Cluster" })
-  depends_on = [
-    aws_iam_role_policy_attachment.AmazonEKSClusterPolicy,
-    aws_iam_role_policy_attachment.AmazonEKSVPCResourceController,
-  ]
+  tags       = { Name = "${var.resource_prefix}-Cluster" }
+  depends_on = [aws_iam_role_policy_attachment.cluster_role_to_managed_policy]
 }
 
 resource "aws_eks_identity_provider_config" "ClusterOIDCConfig" {
@@ -90,12 +90,12 @@ resource "aws_eks_identity_provider_config" "ClusterOIDCConfig" {
 }
 
 resource "aws_eks_addon" "eks_main_addon" {
-  cluster_name      = aws_eks_cluster.MainCluster.name
-  addon_name        = "vpc-cni"
+  cluster_name                = aws_eks_cluster.MainCluster.name
+  addon_name                  = "vpc-cni"
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "NONE"
-  tags              = merge(var.resource_tags, { "eks_addon" = "vpc-cni" })
-  depends_on        = [aws_eks_cluster.MainCluster]
+  tags                        = { "eks_addon" = "vpc-cni" }
+  depends_on                  = [aws_eks_cluster.MainCluster]
 }
 
 resource "aws_iam_role" "eks_node_iam_role" {
@@ -114,124 +114,63 @@ resource "aws_iam_role" "eks_node_iam_role" {
   ]
 }
 POLICY
-  tags               = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Node-Role" })
+  tags               = { Name = "${var.resource_prefix}-EKS-Node-Role" }
 }
 
-resource "aws_iam_role_policy_attachment" "AmazonEKSWorkerNodePolicyNodeRole" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+resource "aws_iam_role_policy_attachment" "node_role_to_managed_policy" {
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  ])
   role       = aws_iam_role.eks_node_iam_role.name
+  policy_arn = each.value
 }
 
-resource "aws_iam_role_policy_attachment" "AmazonEKSCNIPolicyNodeRole" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.eks_node_iam_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "AmazonEKSSSMPolicyNodeRole" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  role       = aws_iam_role.eks_node_iam_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnlyNodeRole" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  role       = aws_iam_role.eks_node_iam_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "AmazonSSMPolicyNodeRole" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  role       = aws_iam_role.eks_node_iam_role.name
-}
-
-resource "aws_launch_template" "amd64_lt" {
-  count = var.amd64_nodegroup_count
-  name = "${var.resource_prefix}-eks-amd64-lt${count.index}"
-  key_name = var.ssh_pubkey_name
-  tag_specifications {
-    resource_type = "instance"
-    tags = {
-      Name = "${var.resource_prefix}-AMD64NG${count.index}-EKSNode"
-    }
-  }
-}
-
-resource "aws_eks_node_group" "amd64_ng" {
-  count = var.amd64_nodegroup_count 
+resource "aws_eks_node_group" "eks_ngs" {
+  for_each        = { for ng in var.node_group_configs : ng.name => ng }
   cluster_name    = aws_eks_cluster.MainCluster.name
-  node_group_name = "${var.resource_prefix}-eks-amd64-ng${count.index}"
+  node_group_name = "${var.resource_prefix}-eks-ng-${each.value.name}"
   node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types  = [var.amd64_nodegroup_inst_type]
-  ami_type        = var.amd64_nodegroup_ami_type
-  subnet_ids      = (var.amd64_nodegroup_count > 0) ? [var.node_subnet_ids[count.index % length(var.node_subnet_ids)]] : null
+  instance_types  = [each.value.instance_type]
+  ami_type        = each.value.ami_type
+  subnet_ids      = var.node_subnet_ids
   labels = {
-    cloudkube-node-type = "amd64-nodegroup-${count.index}"
-  }
-  scaling_config {
-    desired_size = 3
-    max_size     = 3
-    min_size     = 3
-  }
-  update_config {
-    max_unavailable = 1
-  }
-  launch_template {
-    id = aws_launch_template.amd64_lt[count.index].id
-    version = aws_launch_template.amd64_lt[count.index].latest_version 
-  }
-  depends_on = [
-    aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
-    aws_iam_role_policy_attachment.AmazonEKSCNIPolicyNodeRole,
-    aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnlyNodeRole,
-    aws_eks_cluster.MainCluster
-  ]
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-AMD64-EKSNG${count.index}-ASG" })
-}
-
-resource "aws_launch_template" "arm64_lt" {
-  count = var.arm64_nodegroup_count
-  name = "${var.resource_prefix}-eks-arm64-lt${count.index}"
-  key_name = var.ssh_pubkey_name
-  tag_specifications {
-    resource_type = "instance"
-    tags = {
-      Name = "${var.resource_prefix}-ARM64NG${count.index}-EKSNode"
-    }
-  }
-}
-
-resource "aws_eks_node_group" "arm64_ng" {
-  count = var.arm64_nodegroup_count 
-  cluster_name    = aws_eks_cluster.MainCluster.name
-  node_group_name = "${var.resource_prefix}-eks-arm64-ng${count.index}"
-  node_role_arn   = aws_iam_role.eks_node_iam_role.arn
-  instance_types  = [var.arm64_nodegroup_inst_type]
-  ami_type        = var.arm64_nodegroup_ami_type
-  subnet_ids      = (var.arm64_nodegroup_count > 0) ? [var.node_subnet_ids[count.index % length(var.node_subnet_ids)]] : null
-  labels = {
-    cloudkube-node-type = "arm64-nodegroup-${count.index}"
+    cloudkube-node-group = "${each.value.name}"
   }
   taint {
-    key = "arch"
-    value = "arm64"
+    key    = "arch"
+    value  = each.value.cpu_arch
     effect = "NO_SCHEDULE"
   }
   scaling_config {
-    desired_size = 3
-    max_size     = 3
-    min_size     = 3
+    desired_size = each.value.node_size_desired
+    max_size     = each.value.node_size_max
+    min_size     = each.value.node_size_min
   }
   update_config {
     max_unavailable = 1
   }
-  launch_template {
-    id = aws_launch_template.arm64_lt[count.index].id
-    version = aws_launch_template.arm64_lt[count.index].latest_version 
+  remote_access {
+    ec2_ssh_key = var.ssh_pubkey_name
   }
   depends_on = [
-    aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicyNodeRole,
-    aws_iam_role_policy_attachment.AmazonEKSCNIPolicyNodeRole,
-    aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnlyNodeRole,
-    aws_iam_role_policy_attachment.AmazonSSMPolicyNodeRole,
+    aws_iam_role_policy_attachment.node_role_to_managed_policy,
     aws_eks_cluster.MainCluster
   ]
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-ARM64-EKSNG${count.index}-ASG" })
+  tags = { Name = "${var.resource_prefix}-eks-ng-${each.value.name}-asg" }
 }
+
+
+#resource "aws_autoscaling_group_tag" "node_ng_names" {
+#  for_each               = aws_eks_node_group.eks_ngs
+#  autoscaling_group_name = each.value.resources[0].autoscaling_groups[0].name
+#  tag {
+#    key                 = "Name"
+#    value               = "${each.value.id}-node"
+#    propagate_at_launch = true
+#  }
+#}
+
+data "aws_caller_identity" "current" {}

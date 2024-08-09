@@ -1,4 +1,4 @@
-variable "Tags" {
+variable "CommonTags" {
   description = "Tags for every resource."
   type        = map(any)
   default = {
@@ -46,32 +46,40 @@ variable "init_eks_admin_email" {
   type    = string
   default = "test@example.com"
 }
-variable "amd64_nodegroup_count" {
-  type    = number
-  default = 2
-}
-variable "arm64_nodegroup_count" {
-  type    = number
-  default = 1
-}
-variable "amd64_nodegroup_inst_type" {
-  type    = string 
-  default = "t3.medium"
-}
-variable "arm64_nodegroup_inst_type" {
-  type    = string
-  default = "m7g.large"
-}
-# Valid Values for AMI type: https://docs.aws.amazon.com/eks/latest/APIReference/API_Nodegroup.html
-variable "amd64_nodegroup_ami_type" {
-  type    = string
-  default = "BOTTLEROCKET_x86_64"
-}
-variable "arm64_nodegroup_ami_type" {
-  type    = string
-  default = "BOTTLEROCKET_ARM_64"
-}
 variable "kubernetes_version" {
   type    = string
-  default = "1.29"
+  default = "1.30"
+}
+# Valid Values for AMI type: https://docs.aws.amazon.com/eks/latest/APIReference/API_Nodegroup.html
+variable "node_group_configs" {
+  type = list(map(any))
+  default = [
+    {
+      name              = "ng1"
+      cpu_arch          = "amd64"
+      instance_type     = "t3.medium"
+      ami_type          = "BOTTLEROCKET_x86_64"
+      node_size_desired = 3
+      node_size_min     = 3
+      node_size_max     = 3
+    },
+    {
+      name              = "ng2"
+      cpu_arch          = "amd64"
+      instance_type     = "t3.medium"
+      ami_type          = "AL2023_x86_64_STANDARD"
+      node_size_desired = 3
+      node_size_min     = 3
+      node_size_max     = 3
+    },
+    {
+      name              = "ng3"
+      cpu_arch          = "arm64"
+      instance_type     = "m7g.large"
+      ami_type          = "BOTTLEROCKET_ARM_64"
+      node_size_desired = 3
+      node_size_min     = 3
+      node_size_max     = 3
+    }
+  ]
 }

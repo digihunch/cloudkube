@@ -13,7 +13,7 @@ resource "aws_iam_role" "bastion_instance_role" {
       }
     ]
   })
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-Bastion-Instance-Role" })
+  tags = { Name = "${var.resource_prefix}-Bastion-Instance-Role" }
 }
 
 resource "aws_iam_policy" "bastion_cognito_policy" {
@@ -40,6 +40,8 @@ resource "aws_iam_role_policy_attachment" "bastion_role_policy_attachment" {
   policy_arn = aws_iam_policy.bastion_cognito_policy.arn
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_role" "eks_manager_role" {
   name = "${var.resource_prefix}-eks-manager-role"
 
@@ -64,7 +66,7 @@ resource "aws_iam_role" "eks_manager_role" {
       },
     ]
   })
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-EKS-Manager-Role" })
+  tags = { Name = "${var.resource_prefix}-EKS-Manager-Role" }
 }
 
 resource "aws_iam_policy" "eks_manager_policy" {
@@ -80,7 +82,8 @@ resource "aws_iam_policy" "eks_manager_policy" {
         "eks:*",
         "iam:*",
         "ec2:*",
-        "kms:*"
+        "kms:*",
+        "autoscaling:*"
       ],
       "Effect": "Allow",
       "Resource": "*"

@@ -3,13 +3,16 @@ resource "aws_key_pair" "ssh-pubkey" {
   public_key = var.ssh_pubkey_data
 }
 
+data "aws_caller_identity" "current" {}
+data "aws_region" "this" {}
+
 resource "aws_kms_key" "customKey" {
   description             = "This key is used to encrypt resources"
   deletion_window_in_days = 10
   enable_key_rotation     = true
   ## For the key policy to be valid, it requires a service-linked role AWSServiceRoleForAutoScaling to be present. This service-linked role can be created automatically for the first time you create an ASG. 
   # https://docs.aws.amazon.com/autoscaling/ec2/userguide/autoscaling-service-linked-role.html#create-service-linked-role
-  policy      = <<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -61,7 +64,7 @@ resource "aws_kms_key" "customKey" {
   ]
 }
 EOF
-  tags = merge(var.resource_tags, { Name = "${var.resource_prefix}-Custom-KMS-Key" })
+  tags   = { Name = "${var.resource_prefix}-Custom-KMS-Key" }
 }
 
 
