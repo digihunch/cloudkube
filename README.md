@@ -4,45 +4,43 @@ Most enterprises start with a secure networking foundation known as lanzing zone
 
 
 ## EKS
-The Terraform template code is stored in [eks](https://github.com/digihunch/cloudkube/tree/main/eks) directory. It creates the following items:
-- A VPC
-- Several subnets for different purposes across three availability zones
-- A bastion hosts in a private subnet, with common utilities (kubectl, eksctl, helm) installed and configured.
-- An EKS cluster with endpoint exposed in private subnet
-- Several node groups, including both AMD64 and ARM64 nodes
+The Terraform template is in the [eks](https://github.com/digihunch/cloudkube/tree/main/eks) directory. It provisions the followings:
+- A VPC with subnets for mgmt, node, pod, data, services, each across three AZs
+- A bastion hosts in private management subnet, with common utilities (kubectl, eksctl, helm) installed and configured.
+- An EKS cluster with cluster API endpoint exposed in the private subnet
+- three node groups by default but customizable
 - Cognito identity store for authenticating management traffic
 - Other resources related to IAM and encryption
 
 
 ### Access to Bastion
 
-The template picks up the file `~/.ssh/id_rsa.pub` and add the public key as authorized key on bastion host, as well as EKS nodes.
+The template reads the file `~/.ssh/id_rsa.pub` from where you run the apply command, then add the public key as authorized key on bastion host, as well as EKS nodes. Alternatively, you can specify the public key as a parameter.
 
 It is stronly recommended that user connect `kubectl` to the cluster from the Bastion host. You may SSH to the bastion host using [Session Manager plugin for AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html). Alternatively, you can use the bastion host as a SOCKS5 proxy, and connect with `kubectl` from your local machine via the [SOCKS5 Proxy](https://kubernetes.io/docs/tasks/extend-kubernetes/socks5-proxy-access-api/).
 
 
 ### Identity for kubectl to connect to API server
-As stated in the [documentation](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html), when you create an Amazon EKS cluster using an IAM entity (e.g. IAM user, role, federated user etc), that IAM entity is automatically granted `system:masters` permissions in the cluster's role-based access control (RBAC) configuration in the Amazon EKS control plane. This IAM entity does **not** appear in any visible configuration.
+As stated in the [documentation](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html), when you create an Amazon EKS cluster using an IAM entity (e.g. IAM user, role, federated user etc), that IAM entity is automatically (and implicitly) granted `system:masters` permissions in the cluster's role-based access control (RBAC) configuration in the Amazon EKS control plane. This IAM entity does **not** appear in any visible configuration.
 
-In this project, I first create an IAM role and use the role to create EKS cluster. The role is thereby the implicit master identity for the cluster. The template then creates an EC2 instace as bastion host, who can assume the IAM role and therefore act as the master of the cluster to finish the rest of the configuration from within the cluster. 
+In this project, I first create an IAM role `EKS Manager Role` and use it to create EKS cluster. This `EKS Manager Role` is therefore implicitly recongized as having `system:masters` permission for the cluster via Kubernetes RBAC. 
 
-This cannot be achieved by using an IAM user to create a cluster. To see what identity kubectl uses to access the cluster, turn on Authentication logging and check API access log from CloudWatch.
+The template then creates an EC2 instace as bastion host. The instance profile of this bastion host is associated with `Basion Instance Role`. As a result, any process that runs on top of AWS SDK on the bastion host, by default assumes the `Bastion Instance Role`, including the `AWS CLI`. On the bastion host, we use the `aws eks update-kubeconfig` command to configure `kubectl` to connect to Kube API. To make this work, we have to tell `AWS CLI`, which start with the `Bastion Instance Role`, to explicitly assume the `EKS Manager Role`. This is handled in the bootstrapping script of the bastion host. As a result, once the bastion host is provisioned, you can just SSH to it and use `kubectl` to connect to the cluster.
+
+This is the reason I do not use an IAM user (instead of the `EKS Manager Role`) to create the EKS cluster because in that case only the IAM user is the implicit master. However I cannot act as the same IAM user on the Bastion host. To troubleshoot what identity `kubectl` is using to access the cluster, turn on Authentication logging and check API access log from CloudWatch.
 
 Apart from the implicit master, we can also configure the cluster to use any OIDC identity provider. The project implements an AWS Cognito user pool as identity provider, with a hard-coded user credential. It then connects the EKS cluster to the Cognito user pool. The project also provide a script you can use to configure kubectl to use the Cognito identity to connect to the cluster. This part is a re-implementation of [this](https://aws.amazon.com/blogs/containers/introducing-oidc-identity-provider-authentication-amazon-eks/) solution in Terraform. 
 
 ### Deployment
-First, set the environment variables with the parameter values you wish to customize for Terraform. For example: 
-```sh
-export AWS_REGION="us-east-1"
-export TF_VAR_arm64_nodegroup_count=0 
-```
-Check out the variables for more options. Then We can deploy the whole stack with the Terraform triology:
+We can deploy the whole stack with the Terraform triology:
 ```sh
 terraform init
 terraform plan
 terraform apply
 ```
-It can take 30 minutes to create the cluster, at the end, the output will read:
+Note, if you needs to customize anything using variables, such as node group size and AMI, put the values in `my.tfvars` file and add `-var-file="my.tfvars"` swtich to the end of the plan and apply commands.
+
+It can take up to 30 minutes to create the cluster, at the end, the output will read:
 ```sh
 bastion_info = "i-0bee5f10c7af1f769"
 cognito_user_pool = "us-west-2_VmntWU32w"
@@ -50,7 +48,13 @@ eks_name = "quality-anchovy-eks-cluster"
 ```
 On the bastion host, you will find the bootstrapping script has already configured kubectl to use the implicit master identity, and prepared the script ([configure_kubectl_cognito_user.sh](https://github.com/digihunch/cloudkube/blob/main/aws/modules/bastion/custom_userdata.sh#L6) in home directory) for you to change kubectl to use Cognito user's identity. Check cloud init script to see what it does and /var/log/cloud-init-out.log for what happened during bootstrapping. 
 
-You can use either identity with kubectl to test cluster functionality. Going into production, to map more IAM users or roles to Kubernetes Roles, follow the [document](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html). For example, if your AWS console session does not have visibility to workloads in [EKS resource view](https://aws.amazon.com/blogs/containers/introducing-kubernetes-resource-view-in-amazon-eks-console/), you will need to map the IAM user with appropriate Kubernetes Role. Suppose your console uses [account's root user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html), you may map it to system master by adding the following entry to `aws-auth` configmap in `kube-system` namespace:
+You can use either identity with kubectl to test cluster functionality. Going into production, to map more IAM users or roles to Kubernetes Roles, follow the [document](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html). For example, if your AWS console session does not have visibility to workloads in [EKS resource view](https://aws.amazon.com/blogs/containers/introducing-kubernetes-resource-view-in-amazon-eks-console/), you will need to map the IAM user with appropriate Kubernetes Role. What you can do is look at the `aws-auth` config map in `kube-system` namespace:
+
+```sh
+kubectl edit configmap aws-auth -n kube-system
+```
+
+If your console uses [account's root user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html), you may add the following and save:
 ```yaml
   mapUsers: |
     - groups:
@@ -58,8 +62,14 @@ You can use either identity with kubectl to test cluster functionality. Going in
       userarn: arn:aws:iam::<root-account-id>:root
       username: root
 ```
-This change takes effect immediately.
-In production the better way to do this is to have a viewer role and ask console user to assume that role.
+If your console uses an IAM role instead, you may add the following and save.
+```yaml
+  mapRoles: |
+    - groups:
+      - system:masters
+      rolearn: arn:aws:iam::<account-id>:role/Admin
+```
+This change takes effect immediately. In production the better way to do this is to have a viewer role and ask console user to assume that role.
 
 ![Diagram](asset/eks.drawio.png)
 
