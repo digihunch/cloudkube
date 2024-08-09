@@ -132,6 +132,11 @@ resource "aws_launch_template" "eks_ng_lt" {
   for_each = { for ng in var.node_group_configs : ng.name => ng }
   name     = "${var.resource_prefix}-${each.value.name}-lt"
   key_name = var.ssh_pubkey_name
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
   tag_specifications {
     resource_type = "instance"
     tags = {
@@ -151,10 +156,15 @@ resource "aws_eks_node_group" "eks_ngs" {
   labels = {
     cloudkube-node-group = "${each.value.name}"
   }
-  taint {
-    key    = "arch"
-    value  = each.value.cpu_arch
-    effect = "NO_SCHEDULE"
+
+  # taint the arm64 nodes only
+  dynamic "taint" {
+    for_each = each.value.cpu_arch == "arm64" ? [1] : []
+    content {
+      key    = "arch"
+      value  = "arm64"
+      effect = "NO_SCHEDULE"
+    }
   }
   scaling_config {
     desired_size = each.value.node_size_desired

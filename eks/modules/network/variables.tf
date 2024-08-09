@@ -7,9 +7,6 @@ variable "public_subnets_cidr_list" {
 variable "internalsvc_subnets_cidr_list" {
   type = list(any)
 }
-variable "datasvc_subnets_cidr_list" {
-  type = list(any)
-}
 variable "node_subnets_cidr_list" {
   type = list(any)
 }

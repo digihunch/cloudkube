@@ -1,8 +1,8 @@
-CommonTags={
+CommonTags = {
   Environment = "Test"
   Owner       = "my@digihunch.com"
 }
-node_group_configs=[
+node_group_configs = [
   {
     name              = "myng1"
     cpu_arch          = "amd64"

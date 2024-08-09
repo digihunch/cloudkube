@@ -1,23 +1,22 @@
-# Cloud Kube - Functional Kubernetes cluster implementations on Azure and AWS
+# Cloud Kube - Kubernetes cluster implementations in self-contained Terraform templates 
 
 Most enterprises start with a secure networking foundation known as lanzing zone and build Kubernetes cluster on top of it. For SMBs and startups without such a landing zone looking to create their own Kubernetes clusters, they have to build both their own networking infrastructure and the cluster. CloudKube aims to serve as an opinionated baseline architecture for this purpose. It includes Terraform templates to create a secure, scalable Kubernetes platform on top of basic but secure networking infrastructures.
 
 
-## EKS
+## EKS (Elastic Kubernetes Services on AWS)
 The Terraform template is in the [eks](https://github.com/digihunch/cloudkube/tree/main/eks) directory. It provisions the followings:
-- A VPC with subnets for mgmt, node, pod, data, services, each across three AZs
-- A bastion hosts in private management subnet, with common utilities (kubectl, eksctl, helm) installed and configured.
+- A VPC with four categories of subnets: pubic, internal service, node and pod, each spaning across three AZs;
+- A bastion hosts in internal service subnet, with common utilities (kubectl, eksctl, helm) pre-installed and configured.
 - An EKS cluster with cluster API endpoint exposed in the private subnet
-- three node groups by default but customizable
+- Three node groups by default but customizable
 - Cognito identity store for authenticating management traffic
 - Other resources related to IAM and encryption
 
 
 ### Access to Bastion
+The template reads the file `~/.ssh/id_rsa.pub` from where you run the apply command, then add the public key as authorized key on bastion host, as well as EKS nodes. Alternatively, you can specify the public key via the `pubkey_data` input parameter.
 
-The template reads the file `~/.ssh/id_rsa.pub` from where you run the apply command, then add the public key as authorized key on bastion host, as well as EKS nodes. Alternatively, you can specify the public key as a parameter.
-
-It is stronly recommended that user connect `kubectl` to the cluster from the Bastion host. You may SSH to the bastion host using [Session Manager plugin for AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html). Alternatively, you can use the bastion host as a SOCKS5 proxy, and connect with `kubectl` from your local machine via the [SOCKS5 Proxy](https://kubernetes.io/docs/tasks/extend-kubernetes/socks5-proxy-access-api/).
+User should connect `kubectl` to the cluster from the Bastion host. You may SSH to the bastion host using [Session Manager plugin for AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html). Alternatively, you can use the bastion host as a SOCKS5 proxy, and connect with `kubectl` from your local machine via the [SOCKS5 Proxy](https://kubernetes.io/docs/tasks/extend-kubernetes/socks5-proxy-access-api/).
 
 
 ### Identity for kubectl to connect to API server
@@ -78,10 +77,7 @@ Once testing is completed, to tear downt the cluster, destroy the stack:
 terraform destroy
 ```
 
-## AWS VPC
-If the EKS template is too opinionated and the user only needs a basic and secure networking foundation, this template in [`vpc-base`](https://github.com/digihunch/vpc-base) provisions the required networking components (e.g. VPC, subnet, etc) with labelling as well as a bastion host. Users needs to access the bastion host in private subnet via Session Manager. To SSH to the bastion host, configure [Session Manager plugin for AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html). 
-
-You may use `eksctl` to build cluster on the existing networking, or build a [ROSA](https://docs.openshift.com/rosa/welcome/index.html) cluster.
+If this template is too opinionated and you just need a basic and secure networking foundation, this template in [`vpc-base`](https://github.com/digihunch/vpc-base) provisions the required networking components (e.g. VPC, subnet, etc) and a bastion host. From there, you may use `eksctl` to build cluster on the existing networking, or build a [ROSA](https://docs.openshift.com/rosa/welcome/index.html) cluster.
 
 
 ## Azure Kubernetes Service

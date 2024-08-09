@@ -30,15 +30,6 @@ resource "aws_subnet" "internalsvcsubnets" {
   tags                    = { Name = "${var.resource_prefix}-InternalServiceSubnet${count.index}", "kubernetes.io/role/internal-elb" = 1 }
 }
 
-resource "aws_subnet" "datasvcsubnets" {
-  count                   = length(var.datasvc_subnets_cidr_list)
-  vpc_id                  = aws_vpc.eks_vpc.id
-  cidr_block              = var.datasvc_subnets_cidr_list[count.index]
-  map_public_ip_on_launch = false
-  availability_zone       = data.aws_availability_zones.this.names[count.index]
-  tags                    = { Name = "${var.resource_prefix}-DataServiceSubnet${count.index}" }
-}
-
 resource "aws_subnet" "nodesubnets" {
   count                   = length(var.node_subnets_cidr_list)
   vpc_id                  = aws_vpc.eks_vpc.id
@@ -117,11 +108,6 @@ resource "aws_route_table_association" "node_rt_assocs" {
 resource "aws_route_table_association" "internalsvc_rt_assocs" {
   count          = length(resource.aws_subnet.internalsvcsubnets)
   subnet_id      = resource.aws_subnet.internalsvcsubnets[count.index].id
-  route_table_id = aws_route_table.priv2nat_subnet_route_tables[count.index].id
-}
-resource "aws_route_table_association" "datasvc_rt_assocs" {
-  count          = length(resource.aws_subnet.datasvcsubnets)
-  subnet_id      = resource.aws_subnet.datasvcsubnets[count.index].id
   route_table_id = aws_route_table.priv2nat_subnet_route_tables[count.index].id
 }
 resource "aws_route_table_association" "pod_rt_assocs" {
