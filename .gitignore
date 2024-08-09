@@ -35,3 +35,4 @@ terraform.tfstate
 .terraform.lock.hcl
 *.swp
 
+*.bkp
