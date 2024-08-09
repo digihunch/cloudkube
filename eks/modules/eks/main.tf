@@ -128,6 +128,18 @@ resource "aws_iam_role_policy_attachment" "node_role_to_managed_policy" {
   policy_arn = each.value
 }
 
+resource "aws_launch_template" "eks_ng_lt" {
+  for_each = { for ng in var.node_group_configs : ng.name => ng }
+  name     = "${var.resource_prefix}-${each.value.name}-lt"
+  key_name = var.ssh_pubkey_name
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${var.resource_prefix}-${each.value.name}-node-${each.value.cpu_arch}"
+    }
+  }
+}
+
 resource "aws_eks_node_group" "eks_ngs" {
   for_each        = { for ng in var.node_group_configs : ng.name => ng }
   cluster_name    = aws_eks_cluster.MainCluster.name
@@ -152,9 +164,15 @@ resource "aws_eks_node_group" "eks_ngs" {
   update_config {
     max_unavailable = 1
   }
-  remote_access {
-    ec2_ssh_key = var.ssh_pubkey_name
+
+  # Note: with this launch_template block, the node group will create its own launch template based on the given 
+  #       launch template to add security group and appropriate AMIs, and user data for joining node to cluster
+  #       during bootstrapping. The ASG associated with the node group uses the generated launch template.
+  launch_template {
+    name    = "${var.resource_prefix}-${each.value.name}-lt"
+    version = "$Latest"
   }
+
   depends_on = [
     aws_iam_role_policy_attachment.node_role_to_managed_policy,
     aws_eks_cluster.MainCluster
@@ -162,15 +180,3 @@ resource "aws_eks_node_group" "eks_ngs" {
   tags = { Name = "${var.resource_prefix}-eks-ng-${each.value.name}-asg" }
 }
 
-
-#resource "aws_autoscaling_group_tag" "node_ng_names" {
-#  for_each               = aws_eks_node_group.eks_ngs
-#  autoscaling_group_name = each.value.resources[0].autoscaling_groups[0].name
-#  tag {
-#    key                 = "Name"
-#    value               = "${each.value.id}-node"
-#    propagate_at_launch = true
-#  }
-#}
-
-data "aws_caller_identity" "current" {}

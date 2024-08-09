@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 output "eks_name" {
   value = aws_eks_cluster.MainCluster.id
 }
