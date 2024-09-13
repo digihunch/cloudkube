@@ -8,8 +8,8 @@ variable "CommonTags" {
 }
 variable "pubkey_data" {
   description = "public key data to pass to EC2 instances. This would void the pubkey_path variable"
-  type    = string
-  default = null
+  type        = string
+  default     = null
 }
 variable "pubkey_path" {
   type    = string
@@ -19,11 +19,12 @@ variable "pubkey_path" {
 variable "vpc_config" {
   type = map(any)
   default = {
-    vpc_cidr               = "147.206.0.0/16"
-    subnet_public_pref_len = 22
-    subnet_intsvc_pref_len = 22
-    subnet_node_pref_len   = 22
-    subnet_pod_pref_len    = 18
+    vpc_cidr                  = "147.206.0.0/16"
+    az_count                  = 3
+    public_subnet_pfxlen      = 24
+    internalsvc_subnet_pfxlen = 22
+    node_subnet_pfxlen        = 22
+    pod_subnet_pfxlen         = 22
   }
 }
 variable "cluster_admin_cognito_group" {

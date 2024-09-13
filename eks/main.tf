@@ -1,25 +1,5 @@
 resource "random_pet" "prefix" {}
 
-locals {
-  vpc_pref_len = tonumber(split("/", var.vpc_config.vpc_cidr)[1])
-  # slice VPC CIDR into subnets for each AZ
-  subnet_cidrs = cidrsubnets(var.vpc_config.vpc_cidr,
-    var.vpc_config.subnet_public_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_public_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_public_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_intsvc_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_intsvc_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_intsvc_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_node_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_node_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_node_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_pod_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_pod_pref_len - local.vpc_pref_len,
-    var.vpc_config.subnet_pod_pref_len - local.vpc_pref_len
-  )
-}
-
-
 module "encryption" {
   source          = "./modules/encryption"
   resource_prefix = random_pet.prefix.id
@@ -57,13 +37,15 @@ module "network" {
   providers = {
     aws = aws.power-user
   }
-  source                        = "./modules/network"
-  vpc_cidr_block                = var.vpc_config.vpc_cidr
-  public_subnets_cidr_list      = [local.subnet_cidrs[0], local.subnet_cidrs[1], local.subnet_cidrs[2]]
-  internalsvc_subnets_cidr_list = [local.subnet_cidrs[3], local.subnet_cidrs[4], local.subnet_cidrs[5]]
-  node_subnets_cidr_list        = [local.subnet_cidrs[6], local.subnet_cidrs[7], local.subnet_cidrs[8]]
-  pod_subnets_cidr_list         = [local.subnet_cidrs[9], local.subnet_cidrs[10], local.subnet_cidrs[11]]
-  resource_prefix               = random_pet.prefix.id
+  source = "./modules/network"
+
+  vpc_config = var.vpc_config
+  #vpc_cidr_block                = var.vpc_config.vpc_cidr
+  #public_subnets_cidr_list      = [local.subnet_cidrs[0], local.subnet_cidrs[1], local.subnet_cidrs[2]]
+  #internalsvc_subnets_cidr_list = [local.subnet_cidrs[3], local.subnet_cidrs[4], local.subnet_cidrs[5]]
+  #node_subnets_cidr_list        = [local.subnet_cidrs[6], local.subnet_cidrs[7], local.subnet_cidrs[8]]
+  #pod_subnets_cidr_list         = [local.subnet_cidrs[9], local.subnet_cidrs[10], local.subnet_cidrs[11]]
+  resource_prefix = random_pet.prefix.id
 }
 
 module "eks" {

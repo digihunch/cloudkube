@@ -1,3 +1,11 @@
+vpc_config = {
+  vpc_cidr                  = "147.206.0.0/16"
+  az_count                  = 3
+  public_subnet_pfxlen      = 24
+  internalsvc_subnet_pfxlen = 22
+  node_subnet_pfxlen        = 22
+  pod_subnet_pfxlen         = 22
+}
 CommonTags = {
   Environment = "Test"
   Owner       = "my@digihunch.com"

@@ -94,8 +94,15 @@ resource "aws_eks_addon" "eks_main_addon" {
   addon_name                  = "vpc-cni"
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "NONE"
-  tags                        = { "eks_addon" = "vpc-cni" }
-  depends_on                  = [aws_eks_cluster.MainCluster]
+  configuration_values = jsonencode({
+    env = {
+      ENABLE_PREFIX_DELEGATION = "true"
+    }
+    enableNetworkPolicy = "true"
+  })
+  ## TODO Create service_account_role_arn
+  tags       = { "eks_addon" = "vpc-cni" }
+  depends_on = [aws_eks_cluster.MainCluster]
 }
 
 resource "aws_iam_role" "eks_node_iam_role" {
