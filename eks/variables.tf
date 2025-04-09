@@ -19,7 +19,8 @@ variable "pubkey_path" {
 variable "vpc_config" {
   type = map(any)
   default = {
-    vpc_cidr                  = "147.206.0.0/16"
+    vpc_primary_cidr          = "147.206.0.0/16"
+    vpc_secondary_cidr        = "198.19.0.0/16"
     az_count                  = 3
     public_subnet_pfxlen      = 24
     internalsvc_subnet_pfxlen = 22

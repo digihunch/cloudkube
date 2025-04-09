@@ -39,12 +39,7 @@ module "network" {
   }
   source = "./modules/network"
 
-  vpc_config = var.vpc_config
-  #vpc_cidr_block                = var.vpc_config.vpc_cidr
-  #public_subnets_cidr_list      = [local.subnet_cidrs[0], local.subnet_cidrs[1], local.subnet_cidrs[2]]
-  #internalsvc_subnets_cidr_list = [local.subnet_cidrs[3], local.subnet_cidrs[4], local.subnet_cidrs[5]]
-  #node_subnets_cidr_list        = [local.subnet_cidrs[6], local.subnet_cidrs[7], local.subnet_cidrs[8]]
-  #pod_subnets_cidr_list         = [local.subnet_cidrs[9], local.subnet_cidrs[10], local.subnet_cidrs[11]]
+  vpc_config      = var.vpc_config
   resource_prefix = random_pet.prefix.id
 }
 
@@ -54,6 +49,7 @@ module "eks" {
     aws = aws.eks-manager
   }
   node_subnet_ids         = module.network.vpc_info.node_subnet_ids
+  pod_subnet_ids          = module.network.vpc_info.pod_subnet_ids
   vpc_id                  = module.network.vpc_info.vpc_id
   ssh_pubkey_name         = module.encryption.ssh_pubkey_name
   cognito_oidc_issuer_url = module.idp.cognito_info.issuer_url

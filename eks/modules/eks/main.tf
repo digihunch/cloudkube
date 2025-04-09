@@ -42,6 +42,7 @@ resource "aws_security_group" "cluster_security_group" {
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = [data.aws_vpc.eksVPC.cidr_block]
+    ipv6_cidr_blocks = [data.aws_vpc.eksVPC.ipv6_cidr_block]
   }
   egress {
     description = "outbound traffic"
@@ -49,6 +50,7 @@ resource "aws_security_group" "cluster_security_group" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
   tags = { Name = "${var.resource_prefix}-Cluster-SG" }
 }
@@ -97,6 +99,11 @@ resource "aws_eks_addon" "eks_main_addon" {
   configuration_values = jsonencode({
     env = {
       ENABLE_PREFIX_DELEGATION = "true"
+      AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG = "true"
+      ENABLE_IPV6 = "true"
+      ENABLE_IPV4 = "false"
+      WARM_IP_TARGET = "1"
+      MINIMUM_IP_TARGET = "1"
     }
     enableNetworkPolicy = "true"
   })
@@ -192,7 +199,8 @@ resource "aws_eks_node_group" "eks_ngs" {
 
   depends_on = [
     aws_iam_role_policy_attachment.node_role_to_managed_policy,
-    aws_eks_cluster.MainCluster
+    aws_eks_cluster.MainCluster,
+    aws_eks_addon.eks_main_addon,
   ]
   tags = { Name = "${var.resource_prefix}-eks-ng-${each.value.name}-asg" }
 }
